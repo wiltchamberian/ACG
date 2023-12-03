@@ -11,6 +11,24 @@ type BasicParser struct {
 	index  Int
 }
 
+func (s *BasicParser) ReadFile(path string) error {
+	return s.lexer.ReadFile(path)
+}
+
+func (s *BasicParser) ReadString(path string) error {
+	return s.lexer.ReadString(path)
+}
+
+func (s *BasicParser) TokenStream() error {
+	var err error
+	s.tokens, err = s.lexer.TokenStream()
+	return err
+}
+
+func (s *BasicParser) GetTokens() []Token {
+	return s.tokens
+}
+
 func (s *BasicParser) PeekToken() (*Token, error) {
 	if s.index >= len(s.tokens) || s.index < 0 {
 		return nil, errors.New("overflow")

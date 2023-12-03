@@ -45,7 +45,7 @@ func (s *Lexer) SkipWhiteSpacesAndLineBreaks() Int {
 // skip whitespaces, linebreaks, tabs and so on if possible
 func (s *Lexer) SkipAllUnUsed() Int {
 	var count Int = 0
-	for s.rover < s.length && (s.content[s.rover] == '\n' || s.content[s.rover] == ' ' || s.content[s.rover] == '\t') {
+	for s.rover < s.length && (s.content[s.rover] == '\n' || s.content[s.rover] == ' ' || s.content[s.rover] == '\t' || s.content[s.rover] == '\r') {
 		if s.content[s.rover] == '\n' {
 			s.currentLineNo += 1
 		}
@@ -66,11 +66,11 @@ func (s *Lexer) GetCharacterType(ch byte) int {
 		return Number
 	} else if ch == '_' {
 		return UnderLine
-	} else if ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '<' || ch == '>' || ch == '=' {
+	} else if ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '<' || ch == '>' || ch == '=' || ch == '|' {
 		return Operator
-	} else if ch == ';' || ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}' {
+	} else if ch == ';' || ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}' || ch == ':' {
 		return Delimiter
-	} else if ch == '\'' {
+	} else if ch == '"' || ch == '\'' {
 		return String
 	}
 	return Undefined
@@ -141,6 +141,8 @@ func (s *Lexer) parseOperator() (Token, error) {
 				token.Type = TkDiv
 			} else if ch == '=' {
 				token.Type = TkAssign
+			} else if ch == '|' {
+				token.Type = TkBitwiseOr
 			}
 			break
 		}
@@ -175,6 +177,8 @@ func (s *Lexer) parseDelimiter() (Token, error) {
 		token.Type = TkLBracket
 	} else if ch == ']' {
 		token.Type = TkRBracket
+	} else if ch == ':' {
+		token.Type = TkColon
 	}
 
 	token.Literal = s.content[start:s.rover]
@@ -182,17 +186,22 @@ func (s *Lexer) parseDelimiter() (Token, error) {
 	return token, ec
 }
 
-func (s *Lexer) parseString() (Token, error) {
+// TODO：not support linebreak
+func (s *Lexer) parseString(ch byte) (Token, error) {
 	var token Token
+	token.Type = TkString
 	var ec error
 
 	start := s.rover
 	s.rover += 1
 
-	if s.content[s.rover] == '\'' {
-		token.Type = TkString
-		s.rover += 1
+	for s.rover < s.length && s.content[s.rover] != ch {
+		s.rover++
 	}
+	if s.rover >= s.length {
+		return token, errors.New("unmatch quotes")
+	}
+	s.rover += 1
 
 	token.Literal = s.content[start:s.rover]
 
@@ -227,10 +236,10 @@ func (s *Lexer) NextToken() (Token, error) {
 		}
 	case String:
 		{
-			token, ec = s.parseString()
+			token, ec = s.parseString(ch)
 		}
 	default:
-
+		ec = errors.New("undefined character")
 	}
 	return token, ec
 }

@@ -22,17 +22,3 @@ func (s *TreeType[T]) isType(t *TreeType[T]) bool {
 	}
 	return false
 }
-
-func defineType[T any](value T) *TreeType[T] {
-	t := new(TreeType[T])
-	t.parent = nil
-	t.Value = value
-	return t
-}
-
-func defineSubType[T any](value T, parent *TreeType[T]) *TreeType[T] {
-	t := new(TreeType[T])
-	t.parent = parent
-	t.Value = value
-	return t
-}

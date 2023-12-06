@@ -5,11 +5,14 @@ type TokenType = *UsedType
 
 // possible TokenType, string is used for debug
 var (
-	TkIdentifier TokenType = &UsedType{"Identifier", nil}
-	TkKeyword    TokenType = &UsedType{"Keyword", nil}
-	TkNumber     TokenType = &UsedType{"Number", nil}
-	TkString     TokenType = &UsedType{"String", nil}
-	TkEof        TokenType = &UsedType{"Eof", nil}
+	TkIdentifier    TokenType = &UsedType{"Identifier", nil}
+	TkTerminator    TokenType = &UsedType{"Terminator", TkIdentifier}
+	TkNonTerminator TokenType = &UsedType{"NonTerminator", TkIdentifier}
+
+	TkKeyword TokenType = &UsedType{"Keyword", nil}
+	TkNumber  TokenType = &UsedType{"Number", nil}
+	TkString  TokenType = &UsedType{"String", nil}
+	TkEof     TokenType = &UsedType{"Eof", nil}
 
 	TkOperator  TokenType = &UsedType{"Operator", nil}
 	TkAdd       TokenType = &UsedType{"Add", TkOperator}
@@ -38,4 +41,8 @@ var (
 type Token struct {
 	Type    TokenType
 	Literal []byte
+}
+
+func (s *Token) GetChildren() []INode {
+	return []INode{}
 }

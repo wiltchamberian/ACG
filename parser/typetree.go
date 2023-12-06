@@ -14,7 +14,7 @@ func (s *TreeType[T]) isType(t *TreeType[T]) bool {
 	if s != nil && t == nil {
 		return false
 	}
-	for s != t {
+	for s != t && s != nil {
 		s = s.parent
 	}
 	if s == t {

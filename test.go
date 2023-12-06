@@ -34,8 +34,8 @@ func testLexer() {
 	}
 }
 
-func testEbnfParser() {
-	path := "E:/yao_tang/projects/Compiler/grammar.gram"
+func testEbnfParser() ([]Rule, error) {
+	path := "./grammar.gram"
 	var parser EBNFParser
 	parser.ReadFile(path)
 	parser.TokenStream()
@@ -47,4 +47,12 @@ func testEbnfParser() {
 	for _, rule := range rules {
 		fmt.Println(rule.Name)
 	}
+	return rules, nil
+}
+
+func testGenerator() {
+	rules, _ := testEbnfParser()
+	var generator Generator
+	generator.SetOutputPath("./parser/rparser.go")
+	generator.Generate_rparser(rules)
 }

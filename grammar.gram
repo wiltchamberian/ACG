@@ -1,0 +1,18 @@
+program:program statement ';' 
+        | statement ';';
+statement: assignment
+        | expr 
+        | if_statement;
+expr:   expr '+' term 
+        | expr '-' term 
+        | term;
+term:   term '*' atom
+        | term '/' atom | atom;
+atom:   Identifier 
+        | Number
+        | '(' expr ')';
+assignment: 
+        target '=' expr;
+target: Identifier;
+if_statement: 
+        'if' expr ':' statement;

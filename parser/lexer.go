@@ -93,6 +93,7 @@ func (s *Lexer) parseNumber() (Token, error) {
 	return token, nil
 }
 
+// parse identifier and parse terminator
 func (s *Lexer) parseIdentifier() (Token, error) {
 	var token Token
 	var ec error
@@ -108,6 +109,7 @@ func (s *Lexer) parseIdentifier() (Token, error) {
 			break
 		}
 	}
+
 	token.Type = TkIdentifier
 	token.Literal = s.content[start:s.rover]
 

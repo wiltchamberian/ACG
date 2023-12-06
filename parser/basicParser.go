@@ -85,3 +85,28 @@ func (s *BasicParser) ExpectValue(content interface{}) (*Token, error) {
 func (s *BasicParser) parse() error {
 	return nil
 }
+
+type RBasicParser struct {
+	BasicParser
+}
+
+func (s *RBasicParser) TokenStream() error {
+	err := s.BasicParser.TokenStream()
+	s.index = len(s.tokens) - 1
+	return err
+}
+
+func (s *RBasicParser) PeekToken() (*Token, error) {
+	if s.index >= len(s.tokens) || s.index < 0 {
+		return nil, errors.New("overflow")
+	}
+	return &s.tokens[s.index], nil
+}
+
+func (s *RBasicParser) GetToken() (*Token, error) {
+	if s.index >= len(s.tokens) || s.index < 0 {
+		return nil, errors.New("overflow")
+	}
+	s.index -= 1
+	return &s.tokens[s.index+1], nil
+}

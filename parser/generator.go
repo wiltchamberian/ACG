@@ -36,7 +36,7 @@ func (s *Generator) Generate_rparser(rules []Rule) error {
 	fmt.Fprint(writer, "\tRBasicParser\n")
 	fmt.Fprint(writer, "}\n\n")
 	for _, rule := range rules {
-		fmt.Fprintf(writer, "func (s *RParser) %s() (INode, error){\n", rule.Name)
+		fmt.Fprintf(writer, "func (s *RParser) %s() (INode, error){\n", strings.ToTitle(rule.Name))
 		fmt.Fprint(writer, "\tpos := s.Mark()\n")
 
 		var counter int = 0
@@ -63,7 +63,7 @@ func (s *Generator) Generate_rparser(rules []Rule) error {
 					if unicode.IsUpper(rune(literal[0])) {
 						fmt.Fprintf(writer, "\t\t%s,err = s.Expect(Tk%s)\n", varName, literal)
 					} else {
-						fmt.Fprintf(writer, "\t\t%s,err = s.%s()\n", varName, literal)
+						fmt.Fprintf(writer, "\t\t%s,err = s.%s()\n", varName, strings.ToTitle(literal))
 					}
 				}
 				fmt.Fprint(writer, "\t\tok = ok && (err == nil)\n")

@@ -43,6 +43,10 @@ type Token struct {
 	Literal []byte
 }
 
+func (s *Token) GetName() string {
+	return string(s.Literal)
+}
+
 func (s *Token) GetChildren() []INode {
 	return []INode{}
 }

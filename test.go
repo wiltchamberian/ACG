@@ -55,4 +55,18 @@ func testGenerator() {
 	var generator Generator
 	generator.SetOutputPath("./parser/rparser.go")
 	generator.Generate_rparser(rules)
+
+}
+
+func testParser() {
+	var parser RParser
+	parser.ReadFile("./testcode.txt")
+	parser.TokenStream()
+	root, _ := parser.PROGRAM()
+
+	var travel Travel
+	var printer NodePrinter
+	printer.Init("./parser_tree.txt")
+	travel.DepthFirstTravel(root, &printer)
+	printer.Close()
 }

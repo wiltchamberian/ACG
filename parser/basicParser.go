@@ -110,3 +110,33 @@ func (s *RBasicParser) GetToken() (*Token, error) {
 	s.index -= 1
 	return &s.tokens[s.index+1], nil
 }
+
+func (s *RBasicParser) Expect(typ TokenType) (*Token, error) {
+	token, err := s.PeekToken()
+	if err != nil {
+		return nil, err
+	}
+	if token.Type == typ {
+		s.index -= 1
+		return token, err
+	}
+	return nil, errors.New("not match")
+}
+
+func (s *RBasicParser) ExpectValue(content interface{}) (*Token, error) {
+	token, err := s.PeekToken()
+	if err != nil {
+		return nil, err
+	}
+	if value, ok := content.(string); ok == true {
+		if string(token.Literal) == value {
+			s.index -= 1
+			return token, nil
+		}
+	}
+	if reflect.DeepEqual(token.Literal, content) {
+		s.index -= 1
+		return token, nil
+	}
+	return nil, errors.New("not match")
+}

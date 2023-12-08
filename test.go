@@ -6,6 +6,12 @@ import (
 	. "ACG/parser"
 )
 
+func tt() {
+	var arr []int
+	var arr2 []int
+	arr = append(arr, arr2...)
+}
+
 func test() {
 	var abc []byte = []byte("1234")
 	q := abc[0:2]
@@ -35,7 +41,7 @@ func testLexer() {
 }
 
 func testEbnfParser() ([]Rule, error) {
-	path := "./grammar.gram"
+	path := "./nika_simple.gram"
 	var parser EBNFParser
 	parser.ReadFile(path)
 	parser.TokenStream()
@@ -53,8 +59,9 @@ func testEbnfParser() ([]Rule, error) {
 func testGenerator() {
 	rules, _ := testEbnfParser()
 	var generator Generator
-	generator.SetOutputPath("./parser/rparser.go")
-	generator.Generate_rparser(rules)
+	generator.SetOutputPath("./parser/nika_parser.go")
+	name := "NikaParser"
+	generator.Generate_rparser(name, rules)
 
 }
 

@@ -2,9 +2,14 @@ package parser
 
 import "errors"
 
+type Group struct {
+	Tokens []*Token
+	Type   int //0:item, 1:[]* 2:[]+
+}
+
 type Rule struct {
 	Name string
-	Alts [][]*Token
+	Alts [][]Group
 }
 
 type EBNFParser struct {
@@ -34,16 +39,16 @@ func (gp *EBNFParser) Rule() (Rule, error) {
 	pos := gp.Mark()
 	if name, err := gp.Expect(TkIdentifier); err == nil {
 		if _, err := gp.Expect(TkColon); err == nil {
-			if alt := gp.Alternative(); alt != nil {
-				alts := [][]*Token{alt}
+			if alt, err := gp.Alternative(); err == nil {
+				alts := [][]Group{alt}
 				apos := gp.Mark()
 				for {
 					_, err := gp.ExpectValue("|")
 					if err != nil {
 						break
 					}
-					alt := gp.Alternative()
-					if len(alt) == 0 {
+					alt, err := gp.Alternative()
+					if err != nil {
 						break
 					}
 					alts = append(alts, alt)
@@ -61,12 +66,54 @@ func (gp *EBNFParser) Rule() (Rule, error) {
 }
 
 // Alternative 方法表示解析文法规则的一个选择项
-func (gp *EBNFParser) Alternative() []*Token {
-	items := []*Token{}
-	for item := gp.Item(); item != nil; item = gp.Item() {
-		items = append(items, item)
+func (gp *EBNFParser) Alternative() ([]Group, error) {
+	var groups []Group
+	for {
+		gp, err := gp.Group()
+		if err == nil {
+			groups = append(groups, gp)
+		} else {
+			break
+		}
 	}
-	return items
+	return groups, nil
+}
+
+func (gp *EBNFParser) Group() (group Group, err error) {
+	_, err = gp.Expect(TkLBracket)
+	if err != nil {
+		item := gp.Item()
+		if item == nil {
+			err = errors.New("Group notmatch")
+			return
+		} else {
+			group.Tokens = append(group.Tokens, item)
+			group.Type = 0
+			err = nil
+			return
+		}
+	}
+	for {
+		item := gp.Item()
+		if item != nil {
+			group.Tokens = append(group.Tokens, item)
+		} else {
+			break
+		}
+	}
+	_, err = gp.Expect(TkRBracket)
+	_, err = gp.Expect(TkMul)
+	if err == nil {
+		group.Type = 1
+		return
+	}
+	_, err = gp.Expect(TkAdd)
+	if err == nil {
+		group.Type = 2
+		return
+	}
+	err = errors.New("Group notmatch")
+	return
 }
 
 // Item 方法表示解析文法规则的一个项目

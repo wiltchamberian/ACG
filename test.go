@@ -1,15 +1,19 @@
 package main
 
 import (
-	"fmt"
-
 	. "ACG/parser"
+	"fmt"
+	"slices"
 )
 
 func tt() {
-	var arr []int
-	var arr2 []int
+	var arr = []int{1, 2, 3}
+	var arr2 = []int{4, 5}
 	arr = append(arr, arr2...)
+	slices.Reverse(arr)
+	for _, ele := range arr {
+		fmt.Printf("%d,", ele)
+	}
 }
 
 func test() {

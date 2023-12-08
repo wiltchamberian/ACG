@@ -35,7 +35,8 @@ func (s *Generator) Generate_rparser(name string, rules []Rule) error {
 	writer := bufio.NewWriter(s.file)
 	s.writer = writer
 	fmt.Fprint(writer, "package parser\n\n")
-	fmt.Fprint(writer, "import \"errors\"\n\n")
+	fmt.Fprint(writer, "import \"errors\"\n")
+	fmt.Fprint(writer, "import \"slices\"\n\n")
 	fmt.Fprintf(writer, "type %s struct {\n", name)
 	fmt.Fprint(writer, "\tRBasicParser\n")
 	fmt.Fprint(writer, "}\n\n")
@@ -94,9 +95,9 @@ func (s *Generator) Generate_rparser(name string, rules []Rule) error {
 			counter++
 			fmt.Fprint(writer, "\t\tif ok == true {\n")
 
-			// variableNames = ReverseSlice(variableNames)
+			// slices.Reverse(variableNames)
 			// fmt.Fprintf(writer, "\t\t\treturn &Node{\"%s\",[]INode{%s}},nil\n", string(rule.Name), strings.Join(variableNames, ", "))
-			fmt.Fprint(writer, "\t\t\tReverseSliceInPlace(nodes)\n")
+			fmt.Fprint(writer, "\t\t\tslices.Reverse(nodes)\n")
 			fmt.Fprintf(writer, "\t\t\treturn &Node{\"%s\",nodes},nil\n", string(rule.Name))
 
 			fmt.Fprint(writer, "\t\t}\n")

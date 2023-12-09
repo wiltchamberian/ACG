@@ -69,7 +69,7 @@ func (s *NodePrinter) Close() {
 func (s *NodePrinter) ProcessNode(root INode, level int) {
 	if s.linebreak == true {
 		for i := 0; i < level; i++ {
-			fmt.Fprintf(s.writer, "             ")
+			fmt.Fprintf(s.writer, "         ")
 		}
 		s.linebreak = false
 	}
@@ -77,9 +77,9 @@ func (s *NodePrinter) ProcessNode(root INode, level int) {
 	children := root.GetChildren()
 	isLeaf := (children == nil) || (len(root.GetChildren()) == 0)
 	if isLeaf {
-		fmt.Fprintf(s.writer, "%10s\n", root.GetName())
+		fmt.Fprintf(s.writer, "%6s\n", root.GetName())
 		s.linebreak = true
 	} else {
-		fmt.Fprintf(s.writer, "%10s-->", root.GetName())
+		fmt.Fprintf(s.writer, "%6s-->", root.GetName())
 	}
 }

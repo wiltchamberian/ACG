@@ -68,16 +68,3 @@ func testGenerator() {
 	generator.Generate_rparser(name, rules)
 
 }
-
-func testParser() {
-	var parser RParser
-	parser.ReadFile("./testcode.txt")
-	parser.TokenStream()
-	root, _ := parser.PROGRAM()
-
-	var travel Travel
-	var printer NodePrinter
-	printer.Init("./parser_tree.txt")
-	travel.DepthFirstTravel(root, &printer)
-	printer.Close()
-}

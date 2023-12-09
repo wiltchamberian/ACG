@@ -57,6 +57,16 @@ func (s *Generator) Generate_rparser(name string, rules []Rule) error {
 			fmt.Fprint(writer, "\t\tvar err error\n")
 			fmt.Fprint(writer, "\t\tvar nodes []INode\n")
 			fmt.Fprint(writer, "\t\tvar node INode\n\n")
+
+			for i := len(alt) - 1; i >= 0; i-- {
+				if alt[i].Type == 1 {
+					fmt.Fprint(writer, "\t\tpos2 := s.Mark()\n")
+					fmt.Fprint(writer, "\t\tvar rpos = pos2\n")
+					fmt.Fprint(writer, "\t\tvar arr []INode\n")
+					break
+				}
+			}
+
 			//reverse travel
 			for i := len(alt) - 1; i >= 0; i-- {
 				fmt.Fprint(writer, "\t\t//Group\n")
@@ -70,9 +80,9 @@ func (s *Generator) Generate_rparser(name string, rules []Rule) error {
 					fmt.Fprintf(writer, "\t\tif err != nil{\n\t\t\tgoto LABEL%d\n\t\t}\n", counter)
 				} else if alt[i].Type == 1 {
 					items := alt[i].Tokens
-					fmt.Fprint(writer, "\t\tpos2 := s.Mark()\n")
-					fmt.Fprint(writer, "\t\tvar rpos = pos2\n")
-					fmt.Fprint(writer, "\t\tvar arr []INode\n")
+					fmt.Fprint(writer, "\t\tpos2 = s.Mark()\n")
+					fmt.Fprint(writer, "\t\trpos = pos2\n")
+					fmt.Fprint(writer, "\t\tarr = []INode{}\n")
 					fmt.Fprint(writer, "\t\tfor{\n")
 					fmt.Fprint(writer, "\t\t\trpos = s.Mark()\n")
 					for j := len(items) - 1; j >= 0; j-- {

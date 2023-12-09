@@ -1,0 +1,39 @@
+prog : [stmt]* ;
+stmt: def
+      | struct
+      | func
+      | assign ';'
+      | expr ';'
+      | if
+      | for;
+def : 
+      'var' Identifier Identifier ';'
+      | 'var' Identifier '=' expr ';' ;
+struct : 
+      'struct' Identifier '{' [member]* '}' ;
+member :
+      Identifier Identifier ';' ;
+func:   
+      'fn' Identifier '(' ')' '{' [stmt]* '}'
+      | 'fn' Identifier '(' param [',' param]* ')' '{' [stmt]* '}';
+param : Identifier Identifier
+      | Identifier ;
+expr:   expr '+' term 
+        | expr '-' term 
+        | term ;
+term:   term '*' atom
+        | term '/' atom 
+        | atom;
+atom:   Identifier 
+        | Number
+        | '(' expr ')';
+assign: 
+        Identifier '=' expr
+        | Identifier '+=' expr
+        | Identifier '-=' expr
+        | Identifier '*=' expr
+        | Identifier '/=' expr;
+if: 
+        'if' expr '{' [stmt]* '}' ;
+for: 
+        'for' stmt ';' expr ';' expr '{' [stmt]* '}' ;

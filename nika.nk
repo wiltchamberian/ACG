@@ -1,0 +1,28 @@
+
+
+var x = 3 + 4 * 5;
+var y = x * 4;
+
+y;
+
+var ar = 13;
+
+ar *= 3;
+
+struct Abc {
+  x int;
+  y bool;
+}
+
+fn test() {
+
+}
+
+fn main(){
+  var abc = 13;
+}
+
+
+
+
+

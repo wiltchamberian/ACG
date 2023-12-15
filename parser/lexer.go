@@ -5,11 +5,17 @@ import (
 	"os"
 )
 
+const (
+	Lexer_Normal = iota
+	Lexer_Grammar
+)
+
 type Lexer struct {
 	content       []byte
 	rover         Int
 	length        Int
 	currentLineNo Int
+	mode          int
 }
 
 func (s *Lexer) SkipWhiteSpaces() Int {
@@ -111,6 +117,9 @@ func (s *Lexer) parseIdentifier() (Token, error) {
 	}
 
 	token.Type = TkIdentifier
+	if IsUpperCase(string(s.content[start])) {
+		token.Type = TkTerminator
+	}
 	token.Literal = s.content[start:s.rover]
 
 	return token, ec
@@ -188,6 +197,46 @@ func (s *Lexer) parseDelimiter() (Token, error) {
 	return token, ec
 }
 
+func (s *Lexer) parseDelimiterForBnf() (Token, error) {
+	var token Token
+	var ec error
+
+	ch := s.content[s.rover]
+	start := s.rover
+	s.rover += 1
+
+	if ch == ';' {
+		token.Type = TkSemicolon
+	} else if ch == '(' {
+		token.Type = TkLParen
+	} else if ch == ')' {
+		token.Type = TkRParen
+	} else if ch == '{' {
+		token.Type = TkAction
+		for s.rover < s.length {
+			ch2 := s.content[s.rover]
+			s.rover++
+			if ch2 == '}' {
+				break
+			}
+		}
+		token.Literal = s.content[start+1 : s.rover-1]
+		return token, ec
+	} else if ch == '}' {
+		token.Type = TkRBrace
+	} else if ch == '[' {
+		token.Type = TkLBracket
+	} else if ch == ']' {
+		token.Type = TkRBracket
+	} else if ch == ':' {
+		token.Type = TkColon
+	}
+
+	token.Literal = s.content[start:s.rover]
+
+	return token, ec
+}
+
 // TODO：not support linebreak
 func (s *Lexer) parseString(ch byte) (Token, error) {
 	var token Token
@@ -234,7 +283,13 @@ func (s *Lexer) NextToken() (Token, error) {
 		}
 	case Delimiter:
 		{
-			token, ec = s.parseDelimiter()
+			if s.mode == Lexer_Normal {
+				token, ec = s.parseDelimiter()
+			} else if s.mode == Lexer_Grammar {
+				token, ec = s.parseDelimiterForBnf()
+			} else {
+				panic("")
+			}
 		}
 	case String:
 		{

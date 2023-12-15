@@ -6,13 +6,44 @@ import (
 	"slices"
 )
 
+type ITest interface {
+	run()
+	roll()
+}
+
+type ATest struct {
+}
+
+func (s *ATest) run() {
+	fmt.Println("ATest")
+	s.roll()
+}
+
+func (s *ATest) roll() {
+	fmt.Println("ATest_roll")
+}
+
+type BTest struct {
+	ATest
+}
+
+func (s *BTest) roll() {
+	fmt.Println("BTest_roll")
+}
+
 func tt() {
-	var arr = []int{1, 2, 3}
-	var arr2 = []int{4, 5}
-	arr = append(arr, arr2...)
-	slices.Reverse(arr)
-	for _, ele := range arr {
-		fmt.Printf("%d,", ele)
+	var b ITest = &BTest{}
+	r, er := b.(*ATest)
+	if er != true {
+		panic("")
+	}
+	r.run()
+
+	var arr = []int{1, 2, 3, 4}
+	var bb = arr
+	bb = slices.Delete(bb, 1, 2)
+	for i, _ := range arr {
+		fmt.Printf("%d,", arr[i])
 	}
 }
 
@@ -46,7 +77,7 @@ func testLexer() {
 
 func testEbnfParser() ([]Rule, error) {
 	path := "./nika_simple.gram"
-	var parser EBNFParser
+	var parser = NewEBNFParser()
 	parser.ReadFile(path)
 	parser.TokenStream()
 	tokens := parser.GetTokens()

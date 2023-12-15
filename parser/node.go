@@ -4,24 +4,52 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 )
 
 type INode interface {
+	SetName(string)
 	GetName() string
 	GetChildren() []INode
+	GetParent() INode
+	IsTerminal() bool
+	Select() int //记录该节点在展开时走到哪个alternative分支
+	//Action() string //记录该节点展开时走到那个分支的action
+}
+
+func IsLeafNode(nd INode) bool {
+	return len(nd.GetChildren()) == 0
 }
 
 type Node struct {
-	name     string
-	children []INode
+	Name     string
+	Children []INode
+	Parent   INode
+	selected int
+}
+
+func (s *Node) SetName(name string) {
+	s.Name = name
 }
 
 func (s *Node) GetName() string {
-	return s.name
+	return s.Name
 }
 
 func (s *Node) GetChildren() []INode {
-	return s.children
+	return s.Children
+}
+
+func (s *Node) GetParent() INode {
+	return s.Parent
+}
+
+func (s *Node) Select() int {
+	return s.selected
+}
+
+func (s *Node) IsTerminal() bool {
+	return false
 }
 
 func TreePrint(root INode) {
@@ -82,4 +110,59 @@ func (s *NodePrinter) ProcessNode(root INode, level int) {
 	} else {
 		fmt.Fprintf(s.writer, "%6s-->", root.GetName())
 	}
+}
+
+func ToAST(nd INode) {
+	name := nd.GetName()
+	children := nd.GetChildren()
+	if name == "term" || name == "expr" || name == "assign" {
+		n := nd.(*Node)
+		if len(children) == 3 {
+			n.Name = n.Children[1].GetName()
+			n.Children = slices.Delete(n.Children, 1, 2)
+		} else if len(children) == 1 {
+			n.Name = n.Children[0].GetName()
+			n.Children = n.Children[0].GetChildren()
+			ToAST(n)
+			return
+		} else {
+			panic("")
+		}
+	} else if name == "atom" {
+		n := nd.(*Node)
+		if len(children) == 3 {
+			n.Name = n.Children[1].GetName()
+			n.Children = n.Children[1].GetChildren()
+			ToAST(n)
+			return
+		} else if len(children) == 1 {
+			n.Name = n.Children[0].GetName()
+			n.Children = n.Children[0].GetChildren()
+			ToAST(n)
+			return
+		} else {
+			panic("")
+		}
+	} else if name == "if" {
+		n := nd.(*Node)
+		if len(children) >= 5 {
+			arr := []INode{n.Children[1], n.Children[3]}
+			n.Children = arr
+		} else {
+			panic("")
+		}
+	} else if name == "for" {
+		n := nd.(*Node)
+		if len(children) >= 9 {
+			arr := []INode{n.Children[1], n.Children[3], n.Children[5], n.Children[7]}
+			n.Children = arr
+		} else {
+			panic("")
+		}
+	}
+	children = nd.GetChildren() //update
+	for _, child := range children {
+		ToAST(child)
+	}
+
 }

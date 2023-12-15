@@ -1,4 +1,5 @@
-prog : [stmt]* ;
+prog : stmts ;
+stmts : (stmt)* ;
 stmt: def
       | struct
       | func
@@ -10,19 +11,19 @@ def :
       'var' Identifier Identifier ';'
       | 'var' Identifier '=' expr ';' ;
 struct : 
-      'struct' Identifier '{' [member]* '}' ;
+      'struct' Identifier '{' (member)* '}' ;
 member :
       Identifier Identifier ';' ;
 func:   
-      'fn' Identifier '(' ')' '{' [stmt]* '}'
-      | 'fn' Identifier '(' param [',' param]* ')' '{' [stmt]* '}';
+      'fn' Identifier '(' ')' '{' stmts '}'
+      | 'fn' Identifier '(' param (',' param)* ')' '{' stmts '}';
 param : Identifier Identifier
       | Identifier ;
-expr:   expr '+' term 
-        | expr '-' term 
+expr:   expr '+' term { Add(v[0],v[2])  }
+        | expr '-' term { Sub(v[0], v[2])}
         | term ;
-term:   term '*' atom
-        | term '/' atom 
+term:   term '*' atom { Mul(v[0], v[2])}
+        | term '/' atom { Div(v[0] , v[2])}
         | atom;
 atom:   Identifier 
         | Number
@@ -34,6 +35,6 @@ assign:
         | Identifier '*=' expr
         | Identifier '/=' expr;
 if: 
-        'if' expr '{' [stmt]* '}' ;
+        'if' expr '{' stmts '}' ;
 for: 
-        'for' stmt ';' expr ';' expr '{' [stmt]* '}' ;
+        'for' stmt ';' expr ';' expr '{' stmts '}' ;

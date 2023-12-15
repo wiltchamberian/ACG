@@ -36,11 +36,16 @@ var (
 	TkLBracket  TokenType = &UsedType{"LBracket", TkDelimiter}
 	TkRBracket  TokenType = &UsedType{"RBracket", TkDelimiter}
 	TkColon     TokenType = &UsedType{"Colon", TkDelimiter}
+
+	TkAction TokenType = &UsedType{"Action", nil}
 )
 
 type Token struct {
 	Type    TokenType
 	Literal []byte
+}
+
+func (s *Token) SetName(name string) {
 }
 
 func (s *Token) GetName() string {
@@ -49,4 +54,16 @@ func (s *Token) GetName() string {
 
 func (s *Token) GetChildren() []INode {
 	return []INode{}
+}
+
+func (s *Token) GetParent() INode {
+	return nil
+}
+
+func (s *Token) Select() int {
+	return -1
+}
+
+func (s *Token) IsTerminal() bool {
+	return true
 }

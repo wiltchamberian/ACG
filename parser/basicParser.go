@@ -57,7 +57,7 @@ func (s *BasicParser) Expect(typ TokenType) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	if token.Type == typ {
+	if token.Type.isType(typ) {
 		s.index += 1
 		return token, err
 	}
@@ -116,7 +116,7 @@ func (s *RBasicParser) Expect(typ TokenType) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	if token.Type == typ {
+	if token.Type.isType(typ) {
 		s.index -= 1
 		return token, err
 	}

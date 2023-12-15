@@ -10,5 +10,6 @@ const (
 	Letter
 	Operator
 	Delimiter
+	LParen
 	String
 )

@@ -2,7 +2,9 @@ package main
 
 import (
 	. "ACG/parser"
+	"bufio"
 	"fmt"
+	"os"
 	"slices"
 )
 
@@ -98,4 +100,152 @@ func testGenerator() {
 	name := "NikaParser"
 	generator.Generate_rparser(name, rules)
 
+}
+
+func Repl() {
+	var userInput string
+	var userLine string
+	var eval NikaEval2
+	var nika NikaParser
+	reader := bufio.NewReader(os.Stdin)
+	//fmt.Print(">>")
+	for {
+		userLine, _ = reader.ReadString('\n')
+		if userLine != "\r\n" {
+			// fmt.Printf("length:%d\n", len(userLine))
+			// fmt.Println(userLine)
+			// fmt.Println("<--not equal-->")
+			userInput = userInput + userLine[0:len(userLine)-2]
+		} else {
+			// fmt.Println("<--start parsing-->")
+			nika.ReadString(userInput)
+			nika.TokenStream()
+			inode, err := nika.PROG()
+			if err != nil {
+				fmt.Println("<--parser.PROG fail-->")
+				userInput = ""
+				//fmt.Print(">>")
+				nika.RBasicParser.Clear()
+				continue
+			}
+			obj := eval.Eval_nonterminal(inode)
+			if obj == nil {
+				fmt.Println("<--eval fail-->")
+				userInput = ""
+				//fmt.Print(">>")
+				nika.RBasicParser.Clear()
+				continue
+			}
+			fmt.Println(obj.ToString())
+			userInput = ""
+			//fmt.Print(">>")
+			nika.RBasicParser.Clear()
+		}
+
+	}
+}
+
+func testAll() {
+	path := "./nika.gram"
+	var parser = NewEBNFParser()
+	rules := parser.Parse(path)
+
+	var generator Generator
+	generator.SetOutputPath("./parser/nika_parser.go")
+	generator.Generate_rparser("NikaParser", rules)
+
+	generator.SetOutputPath("./parser/nika_eval.go")
+	generator.Generate_eval("NikaEval", rules)
+}
+
+func TestNikaProgram() {
+	var nika NikaParser
+	var eval NikaEval2
+	nika.ReadString("(3+4*5-7)*(10-2*3-3);")
+	nika.TokenStream()
+	inode, err := nika.PROG()
+	if err != nil {
+		fmt.Println("<--parser.PROG fail-->")
+	}
+	//travel tree
+	var travel Travel
+	var printer NodePrinter
+	printer.Init("./test_tree.txt")
+	travel.DepthFirstTravel(inode, &printer)
+	printer.Close()
+
+	obj := eval.Eval_nonterminal(inode)
+	if obj == nil {
+		fmt.Println("<--eval fail-->")
+	}
+}
+
+func TestGenCompiler() {
+	path := "./nika_vm.gram"
+	var parser = NewEBNFParser()
+	rules := parser.Parse(path)
+
+	var generator Generator
+	generator.SetOutputPath("./parser/nika_compiler.go")
+	generator.GenerateIR("NikaCompiler", rules)
+
+}
+
+func ReplVM() {
+	var userInput string
+	var userLine string
+
+	reader := bufio.NewReader(os.Stdin)
+	//fmt.Print(">>")
+	for {
+		userLine, _ = reader.ReadString('\n')
+		if userLine != "\r\n" {
+			userInput = userInput + userLine[0:len(userLine)-2]
+		} else {
+			var nika NikaParser
+			nika.ReadString(userInput)
+			nika.TokenStream()
+			inode, err := nika.PROG()
+			if err != nil {
+				fmt.Printf("<--parse error-->\n")
+				continue
+			}
+			var compiler NikaCompiler
+			compiler.Compile(inode)
+			vm := NewVM(compiler)
+			vm.Run()
+		}
+
+	}
+}
+
+func TestRunVM() {
+	path := "./nika_vm.gram"
+	var parser = NewEBNFParser()
+	rules := parser.Parse(path)
+
+	//generate parser
+	var generator Generator
+	generator.SetOutputPath("./parser/nika_parser.go")
+	generator.Generate_rparser("NikaParser", rules)
+
+	generator.SetOutputPath("./parser/nika_compiler.go")
+	generator.GenerateIR("NikaCompiler", rules)
+
+	var nika NikaParser
+	nika.ReadString("3+ 4*(8-2);")
+	nika.TokenStream()
+	inode, err := nika.PROG()
+	if err != nil {
+		panic("")
+	}
+
+	var compiler NikaCompiler
+	compiler.Compile(inode)
+
+	vm := NewVM(compiler)
+	obj, err := vm.Run()
+	if obj != nil {
+		fmt.Printf("result:%s\n", obj.ToString())
+	}
 }

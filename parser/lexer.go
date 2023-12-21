@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -16,6 +17,13 @@ type Lexer struct {
 	length        Int
 	currentLineNo Int
 	mode          int
+}
+
+func (s *Lexer) Reset() {
+	s.content = nil
+	s.rover = 0
+	s.length = 0
+	s.currentLineNo = 0
 }
 
 func (s *Lexer) SkipWhiteSpaces() Int {
@@ -78,6 +86,8 @@ func (s *Lexer) GetCharacterType(ch byte) int {
 		return Delimiter
 	} else if ch == '"' || ch == '\'' {
 		return String
+	} else if ch == '$' || ch == '#' || ch == '@' || ch == '`' {
+		return Delimiter
 	}
 	return Undefined
 }
@@ -212,11 +222,13 @@ func (s *Lexer) parseDelimiterForBnf() (Token, error) {
 	} else if ch == ')' {
 		token.Type = TkRParen
 	} else if ch == '{' {
+		token.Type = TkLBrace
+	} else if ch == '$' {
 		token.Type = TkAction
 		for s.rover < s.length {
 			ch2 := s.content[s.rover]
 			s.rover++
-			if ch2 == '}' {
+			if ch2 == '$' {
 				break
 			}
 		}
@@ -297,7 +309,10 @@ func (s *Lexer) NextToken() (Token, error) {
 		}
 	default:
 		ec = errors.New("undefined character")
+		panic("")
 	}
+	//TEST
+	fmt.Printf("token:%s\n", string(token.Literal))
 	return token, ec
 }
 

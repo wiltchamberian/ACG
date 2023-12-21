@@ -1,0 +1,55 @@
+prog : stmts 
+      $s.Compile(v[0])$
+      ;
+stmts : (stmt)* 
+      $for _,item := range v { s.Compile(item) }$
+      ;
+stmt: def
+      | struct
+      | func
+      | assign ';'
+      | expr ';' $s.Compile(v[0])$
+      | if
+      | for;
+def : 
+      'var' Identifier Identifier ';'
+      | 'var' Identifier '=' expr ';' ;
+struct : 
+      'struct' Identifier '{' (member)* '}' ;
+member :
+      Identifier Identifier ';' ;
+func:   
+      'fn' Identifier '(' ')' '{' stmts '}'
+      | 'fn' Identifier '(' param (',' param)* ')' '{' stmts '}';
+param : Identifier Identifier
+      | Identifier ;
+expr:   expr '+' term 
+        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[2])){s.emit(OpAdd)} $
+        | expr '-' term 
+        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[2])){s.emit(OpSub)} $
+        | term 
+        $ s.Compile(v[0]) $
+        ;
+term:   term '*' atom 
+        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[2])){s.emit(OpMul)} $
+        | term '/' atom 
+        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[1])){s.emit(OpDiv)} $
+        | atom
+        $ s.Compile(v[0]) $
+        ;
+atom:   Identifier 
+        | Number
+        $ s.emit(OpConstant, s.addConstant(ToNkInteger(v[0]))) $
+        | '(' expr ')'
+        $ s.Compile(v[1]) $
+        ;
+assign: 
+        Identifier '=' expr
+        | Identifier '+=' expr
+        | Identifier '-=' expr
+        | Identifier '*=' expr
+        | Identifier '/=' expr;
+if: 
+        'if' expr '{' stmts '}' ;
+for: 
+        'for' stmt ';' expr ';' expr '{' stmts '}' ;

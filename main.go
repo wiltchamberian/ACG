@@ -2,9 +2,6 @@ package main
 
 import (
 	. "ACG/parser"
-	"bufio"
-	"fmt"
-	"os"
 )
 
 func run() {
@@ -16,8 +13,7 @@ func run() {
 	//generate parser
 	var generator Generator
 	generator.SetOutputPath("./parser/nika_parser.go")
-	name := "NikaParser"
-	generator.Generate_rparser(name, rules)
+	generator.Generate_rparser("NikaParser", rules)
 
 }
 func test1() {
@@ -49,72 +45,14 @@ func test2() {
 
 	//generate parser
 	var generator Generator
-	generator.SetOutputPath("./parser/nika_eval2.go")
-	generator.Generate_eval3("NikaEval2", rules)
-}
-
-func Repl() {
-	var userInput string
-	var userLine string
-	var eval NikaEval2
-	var nika NikaParser
-	reader := bufio.NewReader(os.Stdin)
-	//fmt.Print(">>")
-	for {
-		userLine, _ = reader.ReadString('\n')
-		if userLine != "\r\n" {
-			// fmt.Printf("length:%d\n", len(userLine))
-			// fmt.Println(userLine)
-			// fmt.Println("<--not equal-->")
-			userInput = userInput + userLine[0:len(userLine)-2]
-		} else {
-			// fmt.Println("<--start parsing-->")
-			nika.ReadString(userInput)
-			nika.TokenStream()
-			inode, err := nika.PROG()
-			if err != nil {
-				fmt.Println("<--parser.PROG fail-->")
-				userInput = ""
-				//fmt.Print(">>")
-				continue
-			}
-			obj := eval.Eval_nonterminal(inode)
-			if obj == nil {
-				fmt.Println("<--eval fail-->")
-				userInput = ""
-				//fmt.Print(">>")
-				continue
-			}
-			fmt.Println(obj.ToString())
-			userInput = ""
-			//fmt.Print(">>")
-		}
-
-	}
+	generator.SetOutputPath("./parser/nika_eval.go")
+	generator.Generate_eval("NikaEval", rules)
 }
 
 func main() {
+	//testAll()
+	//Repl()
+	TestRunVM()
 
-	//test2()
-	Repl()
-
-	var nika NikaParser
-	var eval NikaEval2
-	nika.ReadString("3+4;")
-	nika.TokenStream()
-	inode, err := nika.PROG()
-	if err != nil {
-		fmt.Println("<--parser.PROG fail-->")
-	}
-	//travel tree
-	var travel Travel
-	var printer NodePrinter
-	printer.Init("./test_tree.txt")
-	travel.DepthFirstTravel(inode, &printer)
-	printer.Close()
-
-	obj := eval.Eval_nonterminal(inode)
-	if obj == nil {
-		fmt.Println("<--eval fail-->")
-	}
+	return
 }

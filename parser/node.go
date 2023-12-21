@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 )
 
 type INode interface {
 	SetName(string)
 	GetName() string
+	GetLiteral() string
 	GetChildren() []INode
 	GetParent() INode
 	IsTerminal() bool
@@ -21,11 +23,23 @@ func IsLeafNode(nd INode) bool {
 	return len(nd.GetChildren()) == 0
 }
 
+func ToNkInteger(nd INode) *NkInteger {
+	d, er := strconv.Atoi(nd.GetLiteral())
+	if er != nil {
+		return nil
+	}
+	return &NkInteger{Value: d}
+}
+
 type Node struct {
 	Name     string
 	Children []INode
 	Parent   INode
 	selected int
+}
+
+func (s *Node) GetLiteral() string {
+	return ""
 }
 
 func (s *Node) SetName(name string) {

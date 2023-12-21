@@ -19,15 +19,16 @@ func:
       | 'fn' Identifier '(' param (',' param)* ')' '{' stmts '}';
 param : Identifier Identifier
       | Identifier ;
-expr:   expr '+' term { Add(v[0],v[2])  }
-        | expr '-' term { Sub(v[0], v[2])}
+expr:   expr '+' term $ Add(v[0],v[2])  $
+        | expr '-' term $ Sub(v[0], v[2])$
         | term ;
-term:   term '*' atom { Mul(v[0], v[2])}
-        | term '/' atom { Div(v[0] , v[2])}
+term:   term '*' atom $ Mul(v[0], v[2])$
+        | term '/' atom $ Div(v[0] , v[2])$
         | atom;
 atom:   Identifier 
         | Number
-        | '(' expr ')';
+        | '(' expr ')' $ v[1] $
+        ;
 assign: 
         Identifier '=' expr
         | Identifier '+=' expr

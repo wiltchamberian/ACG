@@ -11,6 +11,12 @@ type BasicParser struct {
 	index  Int
 }
 
+func (s *BasicParser) Clear() {
+	s.lexer.Reset()
+	s.tokens = nil
+	s.index = 0
+}
+
 func (s *BasicParser) ReadFile(path string) error {
 	return s.lexer.ReadFile(path)
 }

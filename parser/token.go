@@ -45,11 +45,15 @@ type Token struct {
 	Literal []byte
 }
 
+func (s *Token) GetLiteral() string {
+	return string(s.Literal)
+}
+
 func (s *Token) SetName(name string) {
 }
 
 func (s *Token) GetName() string {
-	return string(s.Literal)
+	return string(s.Type.Value)
 }
 
 func (s *Token) GetChildren() []INode {

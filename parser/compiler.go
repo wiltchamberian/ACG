@@ -1,8 +1,11 @@
 package parser
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
-//a handwrite compilerl
+// a handwrite compilerl
 type Compiler struct {
 	instructions Instructions
 	constants    []NkObject
@@ -25,6 +28,11 @@ func (s *Compiler) addInstruction(ins []byte) int {
 	s.instructions = append(s.instructions, ins...)
 	return pos
 }
+
+// func (s *Compiler) C(node INode) bool {
+// 	err := s.Compile(node)
+// 	return err == nil
+// }
 
 func (s *Compiler) Compile(node INode) error {
 	name := node.GetName()
@@ -62,6 +70,8 @@ func (s *Compiler) Compile(node INode) error {
 
 			}
 		}
+	default:
+		fmt.Printf("Compile(node INode):%s\n", name)
 	}
 
 	return nil

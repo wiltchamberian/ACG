@@ -1,54 +1,173 @@
-prog : stmts 
-      $s.Compile(v[0])$
+[terminations]
+
+[bnf_config]
+default_action:$s.C(v[0])$
+
+[bnf_action_alias]
+"loop":"s.C(v[0]);for i:=1;i<len(v);i+=2{s.C(v[i+1]);s.emit(M(v[i]));}"
+
+[bnf]
+prog: stmts 
       ;
-stmts : (stmt)* 
-      $for _,item := range v { s.Compile(item) }$
+
+stmts: (stmt)* 
+      $for _,t := range v { s.C(t) }$
       ;
+
 stmt: def
       | struct
       | func
-      | assign ';'
-      | expr ';' $s.Compile(v[0])$
+      //| assign ';' //moved to expr
+      | exprs ';'
       | if
-      | for;
-def : 
+      | for
+      ;
+
+def: 
       'var' Identifier Identifier ';'
-      | 'var' Identifier '=' expr ';' ;
-struct : 
-      'struct' Identifier '{' (member)* '}' ;
+      | 'var' Identifier '=' expr ';' 
+      ;
+
+struct: 
+      'struct' Identifier '{' (member)* '}' 
+      ;
+
 member :
-      Identifier Identifier ';' ;
+      Identifier Identifier ';' 
+      ;
+
 func:   
       'fn' Identifier '(' ')' '{' stmts '}'
-      | 'fn' Identifier '(' param (',' param)* ')' '{' stmts '}';
+      | 'fn' Identifier '(' param (',' param)* ')' '{' stmts '}'
+      ;
+
 param : Identifier Identifier
-      | Identifier ;
-expr:   expr '+' term 
-        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[2])){s.emit(OpAdd)} $
-        | expr '-' term 
-        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[2])){s.emit(OpSub)} $
-        | term 
-        $ s.Compile(v[0]) $
+      | Identifier 
+      ;
+
+exprs: 
+      (expr ',')* expr
+      $for _,t := range v {s.C(t)}$
+      ;
+    
+expr: (Identifier aop)* cond
+      ;
+
+/*eliminate right recursion
+assign: 
+        Identifier aop expr
         ;
-term:   term '*' atom 
-        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[2])){s.emit(OpMul)} $
-        | term '/' atom 
-        $ if(nil==s.Compile(v[0])&&nil==s.Compile(v[1])){s.emit(OpDiv)} $
-        | atom
-        $ s.Compile(v[0]) $
+*/
+    
+cond : or
+      //| or '?' exprs ':' cond 
+      ;
+
+or:   (and '||')* and
+      ;
+
+and:  (bor '&&')* bor 
+      ;
+
+bor:  (xor '|') xor
+      ;
+
+xor:  (band '^')* band
+      ;
+
+band: (eq '&')* eq
+      ;
+
+/*
+eq    : rel
+      | eq '==' rel
+      $if(s.C(v[0])&&s.C(v[2])){s.emit(OpEq)}$
+      | eq '!=' rel
+      $if(s.C(v[0])&&s.C(v[2])){s.emit(OpNotEq)}$
+      ;
+*/
+
+eq:   (rel '=='| rel '!=')* rel
+      $s.C(v[0]); for i:=1;i<len(v);i+=2 {s.C(v[i+1]);s.emit(M(v[i]));}$
+      ;
+
+rel:   (shift '<' | shift '>' | shift '<=' | shift '>=' )* shift
+      $s.C(v[0]);for i:=1;i<len(v);i+=2 {s.C(v[i+1]);s.emit(M(v[i]));}$
+      ;
+
+shift:  (sum '<<' | sum '>>')* sum
+        $s.C(v[0]);for i:=1;i<len(v);i+=2{s.C(v[i+1]);s.emit(M(v[i]));}$
         ;
+    
+sum:    (term '+' | term '-')* term
+        $s.C(v[0]);for i:=1;i<len(v);i+=2{s.C(v[i+1]);s.emit(M(v[i]));}$
+        ;
+
+term:   (cast '*' | cast '/' | cast '%')* cast
+        $s.C(v[0]);for i:=1;i<len(v);i+=2{s.C(v[i+1]);s.emit(M(v[i]));}$
+        ;
+
+cast:   uexpr
+        //| type '(' cast ')'
+        ;
+
+/*
+uexpr: 
+        '++' uexpr    //right- recursion!
+        | '--' uexpr
+        | uop cast    //indirect right recursion
+        $Do(s.C(v[1])&&s.C(v[0]))$
+        | postexpr
+        ;
+*/
+
+uexpr:
+        //uop must be put left
+        (uop)* postexpr
+        $Do(s.C(v[1])&&s.C(v[0]))$
+        ;
+
+uop     : '&'  $s.emit(OpAddr)$
+        //| '*'  
+        //| '+'
+        //| '-'
+        | '~'
+        | '!' $s.emit(OpBang)$
+        | '++'
+        | '--'
+        ;
+
+postexpr: 
+        postexpr '.' Identifier
+        | postexpr '++'
+        | postexpr '--'
+        | atom 
+        ;
+
 atom:   Identifier 
+        | 'true' $s.emit(OpTrue)$
+        | 'false' $s.emit(OpFalse)$
         | Number
         $ s.emit(OpConstant, s.addConstant(ToNkInteger(v[0]))) $
-        | '(' expr ')'
-        $ s.Compile(v[1]) $
+        | '(' exprs ')'
+        $ s.C(v[1]) $
         ;
-assign: 
-        Identifier '=' expr
-        | Identifier '+=' expr
-        | Identifier '-=' expr
-        | Identifier '*=' expr
-        | Identifier '/=' expr;
+
+aop:   '='
+      |'+='
+      |'-='
+      |'*='
+      |'/='
+      |'%='
+      |'<<='
+      |'>>='
+      |'&='
+      |'^='
+      |'|='
+      |'&&='
+      |'||='
+      ;
+
 if: 
         'if' expr '{' stmts '}' ;
 for: 

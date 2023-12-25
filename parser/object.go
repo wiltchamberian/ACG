@@ -7,6 +7,22 @@ type NkObject interface {
 	ToString() string
 }
 
+type NkBool struct {
+	Value bool
+}
+
+func (s *NkBool) Type() string {
+	return "Bool"
+}
+
+func (s *NkBool) ToString() string {
+	if s.Value {
+		return "true"
+	} else {
+		return "false"
+	}
+}
+
 type NkInteger struct {
 	Value int
 }

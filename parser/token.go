@@ -25,6 +25,10 @@ var (
 	TkSubEq     TokenType = &UsedType{"SubEq", TkOperator}
 	TkMulEq     TokenType = &UsedType{"MulEq", TkOperator}
 	TkDivEq     TokenType = &UsedType{"DivEq", TkOperator}
+	TkLess      TokenType = &UsedType{"Less", TkOperator}
+	TkGreater   TokenType = &UsedType{"Greater", TkOperator}
+	TkLessEq    TokenType = &UsedType{"LessEq", TkOperator}
+	TkGreaterEq TokenType = &UsedType{"GreaterEq", TkOperator}
 
 	TkDelimiter TokenType = &UsedType{"Delimiter", nil}
 	TkComma     TokenType = &UsedType{"Comma", TkDelimiter}

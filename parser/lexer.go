@@ -57,7 +57,7 @@ func (s *Lexer) SkipWhiteSpacesAndLineBreaks() Int {
 }
 
 // skip whitespaces, linebreaks, tabs and so on if possible
-func (s *Lexer) SkipAllUnUsed() Int {
+func (s *Lexer) SkipUnUseCharacters() Int {
 	var count Int = 0
 	for s.rover < s.length && (s.content[s.rover] == '\n' || s.content[s.rover] == ' ' || s.content[s.rover] == '\t' || s.content[s.rover] == '\r') {
 		if s.content[s.rover] == '\n' {
@@ -67,6 +67,41 @@ func (s *Lexer) SkipAllUnUsed() Int {
 		s.rover += 1
 	}
 	return count
+}
+
+func (s *Lexer) SkipComment() {
+	if s.rover < s.length-1 && s.content[s.rover] == '/' && s.content[s.rover+1] == '/' {
+		s.rover = s.rover + 2
+		for s.rover < s.length {
+			if s.content[s.rover] == '\n' {
+				s.rover += 1
+				break
+			}
+			s.rover += 1
+		}
+	} else if s.rover < s.length-1 && s.content[s.rover] == '/' && s.content[s.rover+1] == '*' {
+		s.rover += 2
+		for s.rover < s.length-1 {
+			if s.content[s.rover] == '*' &&
+				s.content[s.rover+1] == '/' {
+				s.rover += 2
+				break
+			}
+			s.rover += 1
+		}
+	}
+}
+
+func (s *Lexer) SkipAllUnUsed() {
+	start := s.rover
+	for {
+		start = s.rover
+		s.SkipUnUseCharacters()
+		s.SkipComment()
+		if s.rover == start {
+			break
+		}
+	}
 }
 
 func (s *Lexer) CheckEnd() bool {
@@ -151,6 +186,10 @@ func (s *Lexer) parseOperator() (Token, error) {
 			token.Type = TkMulEq
 		} else if ch == '/' && s.content[s.rover] == '=' {
 			token.Type = TkDivEq
+		} else if ch == '<' && s.content[s.rover] == '=' {
+			token.Type = TkLessEq
+		} else if ch == '>' && s.content[s.rover] == '=' {
+			token.Type = TkGreaterEq
 		} else {
 			if ch == '+' {
 				token.Type = TkAdd
@@ -164,6 +203,10 @@ func (s *Lexer) parseOperator() (Token, error) {
 				token.Type = TkAssign
 			} else if ch == '|' {
 				token.Type = TkBitwiseOr
+			} else if ch == '<' {
+				token.Type = TkLess
+			} else if ch == '>' {
+				token.Type = TkGreater
 			}
 			break
 		}

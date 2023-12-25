@@ -25,3 +25,7 @@ func ReverseSliceInPlace[T any](s []T) {
 	}
 	return
 }
+
+func Do(interface{}) {
+	return
+}

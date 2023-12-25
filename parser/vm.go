@@ -14,6 +14,10 @@ type VM struct {
 	instructions Instructions
 	stack        []NkObject
 	sp           int
+
+	//global
+	trueVal  NkObject
+	falseVal NkObject
 }
 
 func NewVM(compiler NikaCompiler) *VM {
@@ -22,6 +26,9 @@ func NewVM(compiler NikaCompiler) *VM {
 	vm.instructions = compiler.instructions
 	vm.sp = 0
 	vm.stack = make([]NkObject, 100)
+
+	vm.trueVal = &NkInteger{Value: 1}
+	vm.falseVal = &NkInteger{Value: 0}
 	return &vm
 }
 
@@ -47,6 +54,32 @@ func (s *VM) push(o NkObject) error {
 	return nil
 }
 
+func (s *VM) popTwoIntegers() (int, int) {
+	right := s.pop()
+	left := s.pop()
+	return left.(*NkInteger).Value, right.(*NkInteger).Value
+}
+
+func (s *VM) popInteger() int {
+	return s.pop().(*NkInteger).Value
+}
+
+func (s *VM) pushInteger(val int) {
+	s.push(&NkInteger{Value: val})
+}
+
+func (s *VM) pushBool(val bool) {
+	if val {
+		s.push(&NkInteger{Value: 1})
+	} else {
+		s.push(&NkInteger{Value: 0})
+	}
+}
+
+func (s *VM) popBool() bool {
+	return s.pop().(*NkInteger).Value != 0
+}
+
 func (s *VM) Run() (NkObject, error) {
 	var err error
 	var obj NkObject
@@ -59,52 +92,76 @@ func (s *VM) Run() (NkObject, error) {
 			{
 				index := ReadUint16(s.instructions[ip+1:])
 				err = s.push(s.constants[index])
-				ip += InstructionByteLen(opCode)
 				if err != nil {
+					ip += InstructionByteLen(opCode)
 					return obj, err
 				}
 			}
 		case OpAdd:
 			{
-				right := s.pop()
-				left := s.pop()
-				rightValue := right.(*NkInteger).Value
-				leftValue := left.(*NkInteger).Value
-				result := leftValue + rightValue
-				s.push(&NkInteger{Value: result})
-				ip += InstructionByteLen(opCode)
+				l, r := s.popTwoIntegers()
+				s.pushInteger(l + r)
 			}
 		case OpSub:
 			{
-				right := s.pop()
-				left := s.pop()
-				rightValue := right.(*NkInteger).Value
-				leftValue := left.(*NkInteger).Value
-				result := leftValue - rightValue
-				s.push(&NkInteger{Value: result})
-				ip += InstructionByteLen(opCode)
+				l, r := s.popTwoIntegers()
+				s.pushInteger(l - r)
 			}
 		case OpMul:
 			{
-				right := s.pop()
-				left := s.pop()
-				rightValue := right.(*NkInteger).Value
-				leftValue := left.(*NkInteger).Value
-				result := leftValue * rightValue
-				s.push(&NkInteger{Value: result})
-				ip += InstructionByteLen(opCode)
+				l, r := s.popTwoIntegers()
+				s.pushInteger(l * r)
 			}
 		case OpDiv:
 			{
-				right := s.pop()
-				left := s.pop()
-				rightValue := right.(*NkInteger).Value
-				leftValue := left.(*NkInteger).Value
-				result := leftValue / rightValue
-				s.push(&NkInteger{Value: result})
-				ip += InstructionByteLen(opCode)
+				l, r := s.popTwoIntegers()
+				s.pushInteger(l / r)
+			}
+		case OpTrue:
+			{
+				s.push(s.trueVal)
+			}
+		case OpFalse:
+			{
+				s.push(s.falseVal)
+			}
+		case OpEq:
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool(l == r)
+			}
+		case OpNotEq:
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool(l != r)
+			}
+		case OpLe:
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool(l < r)
+			}
+		case OpGt:
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool(l > r)
+			}
+		case OpLeEq:
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool(l <= r)
+			}
+		case OpGtEq:
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool(l >= r)
+			}
+		case OpBang:
+			{
+				l := s.popBool()
+				s.pushBool(!l)
 			}
 		}
+		ip += InstructionByteLen(opCode)
 	}
 	obj = s.StackTop()
 	return obj, nil

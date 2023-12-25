@@ -180,3 +180,17 @@ func ToAST(nd INode) {
 	}
 
 }
+
+type Ret struct {
+	Nd  INode
+	Err error
+}
+
+// helper
+func Append(nodes *[]INode, ret Ret) bool {
+	if ret.Err == nil {
+		*nodes = append(*nodes, ret.Nd)
+		return true
+	}
+	return false
+}

@@ -1,41 +1,14 @@
 package parser
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 	"unicode"
 )
 
 type Generator struct {
-	id         int
-	outputPath string
-	file       *os.File
-	writer     *bufio.Writer
-	tabs       string
-}
-
-func (s *Generator) SetOutputPath(path string) {
-	s.outputPath = path
-}
-
-func (s *Generator) ResetTab() {
-	s.tabs = ""
-}
-
-func (s *Generator) OpenFile(path string) error {
-	var err error
-	s.file, err = os.Create(s.outputPath)
-	if err != nil {
-		return err
-	}
-	s.writer = bufio.NewWriter(s.file)
-	return nil
-}
-
-func (s *Generator) CloseFile() {
-	s.file.Close()
+	FileWriter
+	id int
 }
 
 /*
@@ -44,7 +17,8 @@ parser类名，然后每个rule对应一个函数
 每个rule的每个alt生成一个if从句，然后alt里的每个item对应 从句中的一个expect语句
 在从句结尾处(对应alt)生成parser树的节点，从句失败则不生成对应节点
 */
-func (s *Generator) Generate_rparser(name string, rules []Rule) error {
+func (s *Generator) Generate_rparser(name string, bnf BNFRules) error {
+	rules := bnf.Rules
 	var err error
 	err = s.OpenFile(s.outputPath)
 	if err != nil {
@@ -54,6 +28,7 @@ func (s *Generator) Generate_rparser(name string, rules []Rule) error {
 	writer := s.writer
 
 	fmt.Fprint(writer, "package parser\n\n")
+	fmt.Fprint(writer, "import \"fmt\"\n")
 	fmt.Fprint(writer, "import \"errors\"\n")
 	fmt.Fprint(writer, "import \"slices\"\n\n")
 	fmt.Fprintf(writer, "type %s struct {\n", name)
@@ -61,6 +36,10 @@ func (s *Generator) Generate_rparser(name string, rules []Rule) error {
 	fmt.Fprint(writer, "}\n\n")
 	for _, rule := range rules {
 		fmt.Fprintf(writer, "func (s *%s) %s() (INode, error){\n", name, strings.ToTitle(rule.Name))
+
+		//for debug
+		fmt.Fprintf(writer, "\tfmt.Printf(\"%s\\n\")\n", rule.Name)
+
 		fmt.Fprint(writer, "\tpos := s.Mark()\n")
 
 		var counter int = 0
@@ -127,16 +106,12 @@ func (s *Generator) Generate_rparser(name string, rules []Rule) error {
 			fmt.Fprintf(writer, "\t\tgoto LABEL%d\n", counter)
 			fmt.Fprintf(writer, "LABEL%d:\n", counter)
 			counter++
-			fmt.Fprint(writer, "\t\tif ok == true {\n")
 
-			// slices.Reverse(variableNames)
-			// fmt.Fprintf(writer, "\t\t\treturn &Node{\"%s\",[]INode{%s}},nil\n", string(rule.Name), strings.Join(variableNames, ", "))
+			fmt.Fprint(writer, "\t\tif ok == true {\n")
 			fmt.Fprint(writer, "\t\t\tslices.Reverse(nodes)\n")
 			fmt.Fprintf(writer, "\t\t\treturn &Node{\"%s\",nodes,nil,%d},nil\n", string(rule.Name), alt_index)
-
 			fmt.Fprint(writer, "\t\t}\n")
 			fmt.Fprint(writer, "\t\ts.Reset(pos)\n")
-
 			fmt.Fprint(writer, "\t}\n")
 		}
 		fmt.Fprint(writer, "\treturn nil, errors.New(\"None\")\n")
@@ -165,18 +140,8 @@ func (s *Generator) generateItem(item *Token, varName string, level int) {
 	}
 }
 
-func (s *Generator) Generate_rparser2(name string, rules []Rule) error {
-
-	return nil
-}
-
-func (s *Generator) printTabs(level int) {
-	for i := 0; i < level; i++ {
-		fmt.Fprint(s.writer, "\t")
-	}
-}
-
-func (s *Generator) Generate_eval(name string, rules []Rule) error {
+func (s *Generator) Generate_eval(name string, bnf BNFRules) error {
+	rules := bnf.Rules
 	var err error
 	err = s.OpenFile(s.outputPath)
 	if err != nil {
@@ -250,25 +215,8 @@ func (s *Generator) Generate_eval(name string, rules []Rule) error {
 	return nil
 }
 
-func (s *Generator) Printf(format string, a ...any) (n int, err error) {
-	fmt.Fprint(s.writer, s.tabs)
-	return fmt.Fprintf(s.writer, format, a...)
-}
-
-func (s *Generator) Print(a ...any) (n int, err error) {
-	fmt.Fprint(s.writer, s.tabs)
-	return fmt.Fprint(s.writer, a...)
-}
-
-func (s *Generator) AddTab() {
-	s.tabs = s.tabs + "\t"
-}
-
-func (s *Generator) SubTab() {
-	s.tabs = s.tabs[0 : len(s.tabs)-1]
-}
-
-func (s *Generator) GenerateIR(name string, rules []Rule) error {
+func (s *Generator) GenerateIR(name string, bnf BNFRules) error {
+	rules := bnf.Rules
 	var err error
 	err = s.OpenFile(s.outputPath)
 	if err != nil {
@@ -283,6 +231,11 @@ func (s *Generator) GenerateIR(name string, rules []Rule) error {
 	s.Printf("\tCompiler\n")
 	s.Print("}\n\n")
 	s.writer.Flush()
+
+	s.Printf("func (s *%s) C(node INode) bool {\n", name)
+	s.Printf("\terr := s.Compile(node)\n")
+	s.Printf("\treturn err == nil\n")
+	s.Print("}\n\n")
 
 	s.Printf("func (s *%s) Compile(node INode) (err error) {\n", name)
 	s.AddTab()
@@ -299,6 +252,7 @@ func (s *Generator) GenerateIR(name string, rules []Rule) error {
 			if alt.action != "" {
 				s.Printf("v := node.GetChildren()\n")
 				s.Printf("%s\n", alt.action)
+				s.Printf("Do(v)\n")
 			}
 			s.SubTab()
 			s.Printf("}\n")

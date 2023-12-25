@@ -146,3 +146,13 @@ func (s *RBasicParser) ExpectValue(content interface{}) (*Token, error) {
 	}
 	return nil, errors.New("not match")
 }
+
+func (s *RBasicParser) ExpectW(typ TokenType) Ret {
+	a, b := s.Expect(typ)
+	return Ret{a, b}
+}
+
+func (s *RBasicParser) ExpectValueW(content interface{}) Ret {
+	a, b := s.ExpectValue(content)
+	return Ret{a, b}
+}

@@ -10,6 +10,24 @@ const (
 	OpSub
 	OpMul
 	OpDiv
+	OpTrue
+	OpFalse
+
+	OpEq
+	OpNotEq
+	OpGt
+	OpLe
+	OpGtEq
+	OpLeEq
+	OpLShift
+	OpRShift
+
+	OpBang //!
+	OpBAnd //&
+	OpBOr  //|
+	OpPos  //+
+	OpNeg  //-
+	OpAddr //&
 )
 
 type OpCode = byte
@@ -28,6 +46,20 @@ var definitions = map[OpCode]*Definition{
 	OpSub:      {"OpSub", []int{}, 1},
 	OpMul:      {"OpMul", []int{}, 1},
 	OpDiv:      {"OpDiv", []int{}, 1},
+	OpTrue:     {"OpTrue", []int{}, 1},
+	OpFalse:    {"OpTrue", []int{}, 1},
+	OpEq:       {"OpEq", []int{}, 1},
+	OpNotEq:    {"OpNotEq", []int{}, 1},
+	OpLe:       {"OpLe", []int{}, 1},
+	OpGt:       {"OpGt", []int{}, 1},
+	OpLeEq:     {"OpLeEq", []int{}, 1},
+	OpGtEq:     {"OpGtEq", []int{}, 1},
+	OpBang:     {"OpBang", []int{}, 1},
+	OpBAnd:     {"OpBAnd", []int{}, 1},
+	OpBOr:      {"OpBOr", []int{}, 1},
+	OpPos:      {"OpPos", []int{}, 1},
+	OpNeg:      {"OpNeg", []int{}, 1},
+	OpAddr:     {"OpAddr", []int{}, 1},
 }
 
 func LookUp(opcode OpCode) *Definition {
@@ -67,4 +99,26 @@ func InstructionByteLen(opcode OpCode) int {
 		return definition.ByteLen
 	}
 	return 0
+}
+
+func M(nd INode) OpCode {
+	switch nd.GetLiteral() {
+	case "+":
+		return OpAdd
+	case "-":
+		return OpSub
+	case "<<":
+		return OpLShift
+	case ">>":
+		return OpRShift
+	case "<":
+		return OpLe
+	case ">":
+		return OpGt
+	case "<=":
+		return OpLeEq
+	case ">=":
+		return OpGtEq
+	}
+	return OpAdd
 }

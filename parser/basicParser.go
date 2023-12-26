@@ -47,6 +47,15 @@ func (s *BasicParser) TokenStream() error {
 	return err
 }
 
+func (s *BasicParser) Tokenize(str string) error {
+	err := s.ReadString(str)
+	if err != nil {
+		return err
+	}
+	err = s.TokenStream()
+	return err
+}
+
 func (s *BasicParser) GetTokens() []Token {
 	return s.tokens
 }

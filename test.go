@@ -208,9 +208,9 @@ func TestNewGenerator() {
 	//travel tree
 	var travel Travel
 	var printer NodePrinter
-	printer.Init("./test_tree.txt")
+	printer.OpenFile("./test_tree.txt")
 	travel.DepthFirstTravel(ret.Nd, &printer)
-	printer.Close()
+	printer.CloseFile()
 
 	//gen compiler
 	generator.SetOutputPath("./parser/nika_compiler.go")

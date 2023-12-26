@@ -6,7 +6,7 @@ func main() {
 	//testAll()
 	//Repl()
 
-	TestNewGenerator()
+	//TestNewGenerator()
 	//TestRunVM()
 
 	return

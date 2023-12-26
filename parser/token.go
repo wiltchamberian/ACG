@@ -29,6 +29,8 @@ var (
 	TkGreater   TokenType = &UsedType{"Greater", TkOperator}
 	TkLessEq    TokenType = &UsedType{"LessEq", TkOperator}
 	TkGreaterEq TokenType = &UsedType{"GreaterEq", TkOperator}
+	TkEqual     TokenType = &UsedType{"Equal", TkOperator}
+	TkNotEq     TokenType = &UsedType{"NotEq", TkOperator}
 
 	TkDelimiter TokenType = &UsedType{"Delimiter", nil}
 	TkComma     TokenType = &UsedType{"Comma", TkDelimiter}

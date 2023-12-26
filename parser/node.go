@@ -1,9 +1,7 @@
 package parser
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"slices"
 	"strconv"
 )
@@ -17,6 +15,15 @@ type INode interface {
 	IsTerminal() bool
 	Select() int //记录该节点在展开时走到哪个alternative分支
 	//Action() string //记录该节点展开时走到那个分支的action
+}
+
+func NodeCount(inode INode) int {
+	var count int = 1
+	children := inode.GetChildren()
+	for _, v := range children {
+		count += NodeCount(v)
+	}
+	return count
 }
 
 func IsLeafNode(nd INode) bool {
@@ -89,23 +96,8 @@ func (s *Travel) DepthFirstTravel(root INode, pc NodeProcesser) {
 }
 
 type NodePrinter struct {
-	file      *os.File
-	writer    *bufio.Writer
+	FileWriter
 	linebreak bool //flag if just print a "\n"
-}
-
-func (s *NodePrinter) Init(path string) (err error) {
-	s.file, err = os.Create(path)
-	if err != nil {
-		return err
-	}
-	s.writer = bufio.NewWriter(s.file)
-	return nil
-}
-
-func (s *NodePrinter) Close() {
-	s.writer.Flush()
-	s.file.Close()
 }
 
 func (s *NodePrinter) ProcessNode(root INode, level int) {

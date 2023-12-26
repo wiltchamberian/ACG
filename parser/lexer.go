@@ -190,6 +190,10 @@ func (s *Lexer) parseOperator() (Token, error) {
 			token.Type = TkLessEq
 		} else if ch == '>' && s.content[s.rover] == '=' {
 			token.Type = TkGreaterEq
+		} else if ch == '=' && s.content[s.rover] == '=' {
+			token.Type = TkEqual
+		} else if ch == '!' && s.content[s.rover] == '=' {
+			token.Type = TkNotEq
 		} else {
 			if ch == '+' {
 				token.Type = TkAdd
@@ -319,7 +323,7 @@ func (s *Lexer) NextToken() (Token, error) {
 	var ec error
 	s.SkipAllUnUsed()
 	if s.CheckEnd() {
-		return token, errors.New("file end")
+		return token, errors.New("END")
 	}
 	ch := s.content[s.rover]
 	typ := s.GetCharacterType(ch)
@@ -405,5 +409,5 @@ func (s *Lexer) TokenStream() ([]Token, error) {
 		}
 		tokens = append(tokens, token)
 	}
-	return tokens, err
+	return tokens, nil
 }

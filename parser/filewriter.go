@@ -32,6 +32,7 @@ func (s *FileWriter) OpenFile(path string) error {
 }
 
 func (s *FileWriter) CloseFile() {
+	s.writer.Flush()
 	s.file.Close()
 }
 

@@ -7,137 +7,244 @@ import (
 )
 
 type Generator struct {
-	FileWriter
 	id int
+	FileWriter
+	ctl ParserControllor
 }
 
-/*
-generator作为关键组件，其逻辑本质比较简明，对于rules,首先生成
-parser类名，然后每个rule对应一个函数
-每个rule的每个alt生成一个if从句，然后alt里的每个item对应 从句中的一个expect语句
-在从句结尾处(对应alt)生成parser树的节点，从句失败则不生成对应节点
-*/
-func (s *Generator) Generate_rparser(name string, bnf BNFRules) error {
-	rules := bnf.Rules
-	var err error
-	err = s.OpenFile(s.outputPath)
-	if err != nil {
-		return err
-	}
-	defer s.CloseFile()
-	writer := s.writer
-
-	fmt.Fprint(writer, "package parser\n\n")
-	fmt.Fprint(writer, "import \"fmt\"\n")
-	fmt.Fprint(writer, "import \"errors\"\n")
-	fmt.Fprint(writer, "import \"slices\"\n\n")
-	fmt.Fprintf(writer, "type %s struct {\n", name)
-	fmt.Fprint(writer, "\tRBasicParser\n")
-	fmt.Fprint(writer, "}\n\n")
-	for _, rule := range rules {
-		fmt.Fprintf(writer, "func (s *%s) %s() (INode, error){\n", name, strings.ToTitle(rule.Name))
-
-		//for debug
-		fmt.Fprintf(writer, "\tfmt.Printf(\"%s\\n\")\n", rule.Name)
-
-		fmt.Fprint(writer, "\tpos := s.Mark()\n")
-
-		var counter int = 0
-		for alt_index, alt := range rule.Alts {
-			//var variableNames []string
-			//varNamePrefix := "var"
-			fmt.Fprint(writer, "\t//alternative\n")
-			fmt.Fprint(writer, "\t{\n")
-			fmt.Fprint(writer, "\t\tok := true\n")
-			// for i, _ := range alt {
-			// 	fmt.Fprintf(writer, "\t\tvar var%d INode\n", i)
-			// }
-			fmt.Fprint(writer, "\t\tvar err error\n")
-			fmt.Fprint(writer, "\t\tvar nodes []INode\n")
-			fmt.Fprint(writer, "\t\tvar node INode\n\n")
-
-			for i := len(alt.Groups) - 1; i >= 0; i-- {
-				if alt.Groups[i].Type == 1 {
-					fmt.Fprint(writer, "\t\tpos2 := s.Mark()\n")
-					fmt.Fprint(writer, "\t\tvar rpos = pos2\n")
-					fmt.Fprint(writer, "\t\tvar arr []INode\n")
-					break
-				}
-			}
-
-			//reverse travel
-			for i := len(alt.Groups) - 1; i >= 0; i-- {
-				fmt.Fprint(writer, "\t\t//Group\n")
-				if alt.Groups[i].Type == GroupType_Item {
-					item := alt.Groups[i].Tokens[0]
-					// varName := fmt.Sprintf("%s%d", varNamePrefix, len(variableNames))
-					// variableNames = append(variableNames, varName)
-					s.generateItem(item, "node", 2)
-					fmt.Fprint(writer, "\t\tnodes = append(nodes,node)\n")
-					fmt.Fprint(writer, "\t\tok = ok && (err == nil)\n")
-					fmt.Fprintf(writer, "\t\tif err != nil{\n\t\t\tgoto LABEL%d\n\t\t}\n", counter)
-				} else if alt.Groups[i].Type == GroupType_Kleen {
-					items := alt.Groups[i].Tokens
-					fmt.Fprint(writer, "\t\tpos2 = s.Mark()\n")
-					fmt.Fprint(writer, "\t\trpos = pos2\n")
-					fmt.Fprint(writer, "\t\tarr = []INode{}\n")
-					fmt.Fprint(writer, "\t\tfor{\n")
-					fmt.Fprint(writer, "\t\t\trpos = s.Mark()\n")
-					for j := len(items) - 1; j >= 0; j-- {
-						item := items[j]
-						s.generateItem(item, "node", 3)
-						fmt.Fprintf(writer, "\t\t\tif err != nil{\n\t\t\t\tbreak\n\t\t\t}else{\n")
-						fmt.Fprintf(writer, "\t\t\t\tarr = append(arr,node)\n\t\t\t}\n")
-					}
-					fmt.Fprint(writer, "\t\t}\n")
-					fmt.Fprint(writer, "\t\tif(s.Mark() - rpos > 0){\n")
-					fmt.Fprint(writer, "\t\t\ts.Reset(pos2)\n")
-					fmt.Fprint(writer, "\t\t}else{\n")
-
-					fmt.Fprint(writer, "\t\t\tnodes = append(nodes,arr...)\n\t\t}\n")
-					//fmt.Fprint(writer, "\t\t\tvar newNode INode = &Node{Name:\"__kleene\",Children:arr}\n")
-					//fmt.Fprint(writer, "\t\t\tnodes = append(nodes, newNode)\n\t\t}\n")
-				} else {
-
-				}
-				fmt.Fprint(writer, "\t\t\n")
-			}
-			//shut up the compiler
-			fmt.Fprintf(writer, "\t\tgoto LABEL%d\n", counter)
-			fmt.Fprintf(writer, "LABEL%d:\n", counter)
-			counter++
-
-			fmt.Fprint(writer, "\t\tif ok == true {\n")
-			fmt.Fprint(writer, "\t\t\tslices.Reverse(nodes)\n")
-			fmt.Fprintf(writer, "\t\t\treturn &Node{\"%s\",nodes,nil,%d},nil\n", string(rule.Name), alt_index)
-			fmt.Fprint(writer, "\t\t}\n")
-			fmt.Fprint(writer, "\t\ts.Reset(pos)\n")
-			fmt.Fprint(writer, "\t}\n")
-		}
-		fmt.Fprint(writer, "\treturn nil, errors.New(\"None\")\n")
-		fmt.Fprint(writer, "}\n\n")
-	}
-	writer.Flush()
-	fmt.Println("data written to ", s.outputPath)
-	return nil
+func NewLGenerator() *Generator {
+	var gen Generator
+	gen.ctl = &ParserControllorL{}
+	return &gen
 }
 
-func (s *Generator) generateItem(item *Token, varName string, level int) {
+func NewRGenerator() *Generator {
+	var gen Generator
+	gen.ctl = &ParserControllorR{}
+	return &gen
+}
+
+// item can be terminator or nontermator
+func (s *Generator) generateItem(nodesName string, item *Token) {
 	literal := string(item.Literal)
 	//senmantic
 	if item.Type.isType(TkString) {
 		literal = fmt.Sprintf("\"%s\"", literal[1:len(literal)-1])
-		s.printTabs(level)
-		fmt.Fprintf(s.writer, "%s,err = s.ExpectValue(%s)\n", varName, literal)
+		s.Printf("Append(&%s,s.ExpectValueW(%s))", nodesName, literal)
+	} else if unicode.IsUpper(rune(literal[0])) {
+		s.Printf("Append(&%s,s.ExpectW(Tk%s))", nodesName, literal)
 	} else {
-		if unicode.IsUpper(rune(literal[0])) {
-			s.printTabs(level)
-			fmt.Fprintf(s.writer, "%s,err = s.Expect(Tk%s)\n", varName, literal)
+		s.Printf("Append(&%s,s.%s())", nodesName, strings.ToTitle(literal))
+	}
+}
+
+func (s *Generator) PrintKleen(name string, id int, items []*Token) bool {
+	s.Printf("func (s *%s)Kleen_%d(nodes *[]INode) bool {\n", name, id)
+	s.AddTab()
+	s.Printf("for {\n")
+	s.AddTab()
+	s.Printf("ok := s.Para_%d(nodes)\n", id)
+	s.Printf("if ok==false {\n")
+	s.Printf("\tbreak\n")
+	s.Printf("}\n")
+	s.SubTab()
+	s.Printf("}\n")
+	s.Printf("return true\n")
+	s.SubTab()
+	s.Printf("}\n\n")
+	return true
+}
+
+func (s *Generator) PrintPara(name string, id int, iter Iterator[*Token]) {
+	s.Printf("func (s *%s)Para_%d(nodes *[]INode) bool {\n", name, id)
+	s.AddTab()
+	s.Printf("pos := s.Mark()\n")
+	s.Printf("var tmpNodes []INode\n")
+	s.Printf("if(true ")
+	for k := iter.Start(); iter.Legal(k); k = iter.Advance(k) {
+		item := iter.Get(k)
+		literal := string(item.Literal)
+		if literal == "|" {
+			s.FPrintf("){\n")
+			s.Printf("\t*nodes = append(*nodes, tmpNodes...)\n")
+			s.Printf("\treturn true\n")
+			s.Printf("} else{\n")
+			s.Printf("\ts.Reset(pos)\n")
+			s.Printf("\ttmpNodes = []INode{}\n")
+			s.Printf("}\n\n")
+			s.Printf("if(true ")
 		} else {
-			s.printTabs(level)
-			fmt.Fprintf(s.writer, "%s,err = s.%s()\n", varName, strings.ToTitle(literal))
+			s.FPrintf("&&\n")
+			s.generateItem("tmpNodes", item)
 		}
 	}
+	s.FPrintf("){\n")
+	s.Printf("\t*nodes = append(*nodes, tmpNodes...)\n")
+	s.Printf("\treturn true\n")
+	s.Printf("} else{\n")
+	s.Printf("\ts.Reset(pos)\n")
+	s.Printf("\ttmpNodes = []INode{}\n")
+	s.Printf("}\n\n")
+
+	s.Printf("return false\n")
+	s.SubTab()
+	s.Printf("}\n\n")
+}
+
+func (s *Generator) printKleensR(name string, rules []Rule) {
+	id := 0
+	for _, rule := range rules {
+		for i := len(rule.Alts) - 1; i >= 0; i-- {
+			alt := rule.Alts[i]
+			for j := len(alt.Groups) - 1; j >= 0; j-- {
+				group := alt.Groups[j]
+				if group.Type == GroupType_Kleen {
+					iter := ArrayRIter[*Token]{group.Tokens}
+					s.PrintPara(name, id, iter)
+					s.PrintKleen(name, id, group.Tokens)
+					id++
+				}
+			}
+		}
+	}
+}
+
+func (s *Generator) printKleensL(name string, rules []Rule) {
+	id := 0
+	for _, rule := range rules {
+		for i := 0; i < len(rule.Alts); i++ {
+			alt := rule.Alts[i]
+			for j := 0; j < len(alt.Groups); j++ {
+				group := alt.Groups[j]
+				if group.Type == GroupType_Kleen {
+					iter := ArrayIter[*Token]{group.Tokens}
+					s.PrintPara(name, id, iter)
+					s.PrintKleen(name, id, group.Tokens)
+					id++
+				}
+			}
+		}
+	}
+}
+
+func (s *Generator) GenerateRParser(name string, bnf BNFRules) error {
+	s.ctl = &ParserControllorR{}
+	return s.Generate_rparser(name, bnf)
+}
+
+func (s *Generator) GenerateLParser(name string, bnf BNFRules) error {
+	s.ctl = &ParserControllorL{}
+	return s.Generate_lparser(name, bnf)
+}
+
+func (s *Generator) PrintRuleStart(name string, rule Rule) {
+	s.Printf("func (s *%s) %s() Ret {\n", name, strings.ToTitle(rule.Name))
+	s.AddTab()
+	//for debug
+	//s.Printf("fmt.Printf(\"%s\\n\")\n", rule.Name)
+	s.Printf("var nodes []INode\n")
+	s.Printf("pos := s.Mark()\n")
+}
+
+func (s *Generator) PrintRuleEnd() {
+	s.Printf("return Ret{nil, errors.New(\"None\")}\n")
+	s.SubTab()
+	s.Printf("}\n\n")
+}
+
+func (s *Generator) PrintGroup(group Group, id *int) {
+	s.FPrintf(" &&\n")
+	if group.Type == GroupType_Item {
+		s.generateItem("nodes", group.Tokens[0])
+	} else if group.Type == GroupType_Kleen {
+		s.Printf("s.Kleen_%d(&nodes)", *id)
+		(*id)++
+	}
+}
+
+func (s *Generator) PrintStructHead(name string) {
+	s.Print("package parser\n\n")
+	//s.Print("import \"fmt\"\n")
+	s.Print("import \"errors\"\n")
+	s.ctl.PrintImportSlice(s)
+
+	s.Printf("type %s struct {\n", name)
+	s.Printf("\tBasicParser\n")
+	s.Printf("}\n\n")
+
+	s.ctl.PrintNewParser(s, name)
+}
+
+func (s *Generator) PrintAltEnd(rule Rule, i int) {
+	//reverse nodes
+	s.ctl.Print(s)
+	s.Printf("\treturn Ret{&Node{\"%s\",nodes,nil,%d},nil}\n", string(rule.Name), i)
+	s.Printf("} else {\n")
+	s.Printf("\ts.Reset(pos)\n")
+	s.Printf("\tnodes = []INode{}\n")
+	s.Printf("}\n")
+}
+
+func (s *Generator) Generate_rparser(name string, bnf BNFRules) error {
+	rules := bnf.Rules
+	err := s.OpenFile(s.outputPath)
+	if err != nil {
+		return err
+	}
+	defer s.CloseFile()
+
+	s.PrintStructHead(name)
+	s.printKleensR(name, rules)
+	id := 0
+	for _, rule := range rules {
+		s.PrintRuleStart(name, rule)
+		for i := len(rule.Alts) - 1; i >= 0; i-- {
+			alt := rule.Alts[i]
+			s.Printf("if(true ")
+			s.AddTab()
+			for j := len(alt.Groups) - 1; j >= 0; j-- {
+				s.PrintGroup(alt.Groups[j], &id)
+			}
+			s.SubTab()
+			s.Printf("){\n")
+			s.PrintAltEnd(rule, i)
+		}
+		s.PrintRuleEnd()
+	}
+	s.Flush()
+
+	return nil
+}
+
+func (s *Generator) Generate_lparser(name string, bnf BNFRules) error {
+	rules := bnf.Rules
+	err := s.OpenFile(s.outputPath)
+	if err != nil {
+		return err
+	}
+	defer s.CloseFile()
+
+	s.PrintStructHead(name)
+	s.printKleensL(name, rules)
+	id := 0
+	for _, rule := range rules {
+		s.PrintRuleStart(name, rule)
+		for i := 0; i < len(rule.Alts); i++ {
+			alt := rule.Alts[i]
+			s.Printf("if(true ")
+			s.AddTab()
+			for j := 0; j < len(alt.Groups); j++ {
+				s.PrintGroup(alt.Groups[j], &id)
+			}
+			s.SubTab()
+			s.Printf("){\n")
+			s.PrintAltEnd(rule, i)
+		}
+		s.PrintRuleEnd()
+	}
+	s.Flush()
+
+	return nil
 }
 
 func (s *Generator) Generate_eval(name string, bnf BNFRules) error {
@@ -156,6 +263,8 @@ func (s *Generator) Generate_eval(name string, bnf BNFRules) error {
 	//fmt.Fprint(writer, "import \"slices\"\n\n")
 	fmt.Fprintf(writer, "type %s struct {\n", name)
 	fmt.Fprint(writer, "}\n\n")
+
+	s.ctl.PrintNewParser(s, name)
 
 	fmt.Fprintf(writer, "func (s *%s) GetActionResult(nd INode, v []NkObject) (result NkObject){\n", name)
 	fmt.Fprint(writer, "\tname := nd.GetName()\n")
@@ -215,7 +324,7 @@ func (s *Generator) Generate_eval(name string, bnf BNFRules) error {
 	return nil
 }
 
-func (s *Generator) GenerateIR(name string, bnf BNFRules) error {
+func (s *Generator) PrintCompiler(name string, bnf BNFRules) error {
 	rules := bnf.Rules
 	var err error
 	err = s.OpenFile(s.outputPath)
@@ -251,8 +360,9 @@ func (s *Generator) GenerateIR(name string, bnf BNFRules) error {
 			s.AddTab()
 			if alt.action != "" {
 				s.Printf("v := node.GetChildren()\n")
+				s.Printf("l := len(v)\n")
 				s.Printf("%s\n", alt.action)
-				s.Printf("Do(v)\n")
+				s.Printf("Do(v, l)\n") //shut up the compiler!
 			}
 			s.SubTab()
 			s.Printf("}\n")

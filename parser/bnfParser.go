@@ -45,9 +45,8 @@ type BNFParser struct {
 }
 
 func NewBNFParser() BNFParser {
-	var lex Lexer
-	lex.mode = Lexer_Grammar
-	var ebnf = BNFParser{BasicParser: BasicParser{lexer: lex}}
+	var ebnf = BNFParser{BasicParser: NewBasicParserL()}
+	ebnf.BasicParser.lexer.mode = Lexer_Grammar
 	ebnf.ActionAlias = make(map[string]string)
 	return ebnf
 }

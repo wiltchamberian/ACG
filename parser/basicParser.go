@@ -5,10 +5,25 @@ import (
 	"reflect"
 )
 
+// control left or right recursion parse
+
 type BasicParser struct {
-	lexer  Lexer
-	tokens []Token
-	index  Int
+	lexer   Lexer
+	tokens  []Token
+	index   Int
+	control ParserControllor
+}
+
+func NewBasicParserL() BasicParser {
+	var v BasicParser
+	v.control = &ParserControllorL{}
+	return v
+}
+
+func NewBasicParserR() BasicParser {
+	var v BasicParser
+	v.control = &ParserControllorR{}
+	return v
 }
 
 func (s *BasicParser) Clear() {
@@ -28,6 +43,7 @@ func (s *BasicParser) ReadString(path string) error {
 func (s *BasicParser) TokenStream() error {
 	var err error
 	s.tokens, err = s.lexer.TokenStream()
+	s.control.ResetIndex(s)
 	return err
 }
 
@@ -46,7 +62,7 @@ func (s *BasicParser) GetToken() (*Token, error) {
 	if s.index >= len(s.tokens) || s.index < 0 {
 		return nil, errors.New("overflow")
 	}
-	s.index += 1
+	s.control.AdvanceIndex(s)
 	return &s.tokens[s.index-1], nil
 }
 
@@ -64,7 +80,7 @@ func (s *BasicParser) Expect(typ TokenType) (*Token, error) {
 		return nil, err
 	}
 	if token.Type.isType(typ) {
-		s.index += 1
+		s.control.AdvanceIndex(s)
 		return token, err
 	}
 	return nil, errors.New("not match")
@@ -77,12 +93,12 @@ func (s *BasicParser) ExpectValue(content interface{}) (*Token, error) {
 	}
 	if value, ok := content.(string); ok == true {
 		if string(token.Literal) == value {
-			s.index += 1
+			s.control.AdvanceIndex(s)
 			return token, nil
 		}
 	}
 	if reflect.DeepEqual(token.Literal, content) {
-		s.index += 1
+		s.control.AdvanceIndex(s)
 		return token, nil
 	}
 	return nil, errors.New("not match")
@@ -92,67 +108,12 @@ func (s *BasicParser) parse() error {
 	return nil
 }
 
-type RBasicParser struct {
-	BasicParser
-}
-
-func (s *RBasicParser) TokenStream() error {
-	err := s.BasicParser.TokenStream()
-	s.index = len(s.tokens) - 1
-	return err
-}
-
-func (s *RBasicParser) PeekToken() (*Token, error) {
-	if s.index >= len(s.tokens) || s.index < 0 {
-		return nil, errors.New("overflow")
-	}
-	return &s.tokens[s.index], nil
-}
-
-func (s *RBasicParser) GetToken() (*Token, error) {
-	if s.index >= len(s.tokens) || s.index < 0 {
-		return nil, errors.New("overflow")
-	}
-	s.index -= 1
-	return &s.tokens[s.index+1], nil
-}
-
-func (s *RBasicParser) Expect(typ TokenType) (*Token, error) {
-	token, err := s.PeekToken()
-	if err != nil {
-		return nil, err
-	}
-	if token.Type.isType(typ) {
-		s.index -= 1
-		return token, err
-	}
-	return nil, errors.New("not match")
-}
-
-func (s *RBasicParser) ExpectValue(content interface{}) (*Token, error) {
-	token, err := s.PeekToken()
-	if err != nil {
-		return nil, err
-	}
-	if value, ok := content.(string); ok == true {
-		if string(token.Literal) == value {
-			s.index -= 1
-			return token, nil
-		}
-	}
-	if reflect.DeepEqual(token.Literal, content) {
-		s.index -= 1
-		return token, nil
-	}
-	return nil, errors.New("not match")
-}
-
-func (s *RBasicParser) ExpectW(typ TokenType) Ret {
+func (s *BasicParser) ExpectW(typ TokenType) Ret {
 	a, b := s.Expect(typ)
 	return Ret{a, b}
 }
 
-func (s *RBasicParser) ExpectValueW(content interface{}) Ret {
+func (s *BasicParser) ExpectValueW(content interface{}) Ret {
 	a, b := s.ExpectValue(content)
 	return Ret{a, b}
 }

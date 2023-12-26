@@ -119,7 +119,7 @@ func (s *NodePrinter) ProcessNode(root INode, level int) {
 	children := root.GetChildren()
 	isLeaf := (children == nil) || (len(root.GetChildren()) == 0)
 	if isLeaf {
-		fmt.Fprintf(s.writer, "%6s\n", root.GetName())
+		fmt.Fprintf(s.writer, "%6s\n", root.GetLiteral())
 		s.linebreak = true
 	} else {
 		fmt.Fprintf(s.writer, "%6s-->", root.GetName())

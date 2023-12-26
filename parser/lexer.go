@@ -352,7 +352,7 @@ func (s *Lexer) NextToken() (Token, error) {
 		}
 	default:
 		ec = errors.New("undefined character")
-		panic("")
+		//panic("")
 	}
 	//TEST
 	fmt.Printf("token:%s\n", string(token.Literal))

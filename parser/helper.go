@@ -26,6 +26,62 @@ func ReverseSliceInPlace[T any](s []T) {
 	return
 }
 
-func Do(interface{}) {
+func Do(a ...any) {
 	return
+}
+
+type Iterator[T any] interface {
+	Start() int
+	End() int
+	Legal(int) bool
+	Advance(int) int
+	Get(i int) T
+}
+
+type ArrayRIter[T any] struct {
+	arr []T
+}
+
+func (s ArrayRIter[T]) Get(i int) T {
+	return s.arr[i]
+}
+
+func (s ArrayRIter[T]) Start() int {
+	return len(s.arr) - 1
+}
+
+func (s ArrayRIter[T]) End() int {
+	return -1
+}
+
+func (s ArrayRIter[T]) Legal(i int) bool {
+	return i >= 0
+}
+
+func (s ArrayRIter[T]) Advance(i int) int {
+	return (i - 1)
+}
+
+type ArrayIter[T any] struct {
+	arr []T
+}
+
+func (s ArrayIter[T]) Start() int {
+	return 0
+}
+
+func (s ArrayIter[T]) End() int {
+	return len(s.arr)
+}
+
+func (s ArrayIter[T]) Legal(i int) bool {
+	return i < len(s.arr)
+}
+
+func (s ArrayIter[T]) Advance(i int) int {
+	return (i + 1)
+}
+
+func (s ArrayIter[T]) Get(i int) T {
+	return s.arr[i]
 }

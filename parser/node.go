@@ -43,6 +43,7 @@ type Node struct {
 	Children []INode
 	Parent   INode
 	selected int
+	Action   string
 }
 
 func (s *Node) GetLiteral() string {

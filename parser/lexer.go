@@ -115,7 +115,7 @@ func (s *Lexer) GetCharacterType(ch byte) int {
 		return Number
 	} else if ch == '_' {
 		return UnderLine
-	} else if ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '<' || ch == '>' || ch == '=' || ch == '|' {
+	} else if ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '<' || ch == '>' || ch == '=' || ch == '|' || ch == '&' {
 		return Operator
 	} else if ch == ';' || ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}' || ch == ':' {
 		return Delimiter
@@ -194,6 +194,10 @@ func (s *Lexer) parseOperator() (Token, error) {
 			token.Type = TkEqual
 		} else if ch == '!' && s.content[s.rover] == '=' {
 			token.Type = TkNotEq
+		} else if ch == '|' && s.content[s.rover] == '|' {
+			token.Type = TkOr
+		} else if ch == '&' && s.content[s.rover] == '&' {
+			token.Type = TkAnd
 		} else {
 			if ch == '+' {
 				token.Type = TkAdd
@@ -211,6 +215,8 @@ func (s *Lexer) parseOperator() (Token, error) {
 				token.Type = TkLess
 			} else if ch == '>' {
 				token.Type = TkGreater
+			} else if ch == '&' {
+				token.Type = TkBitwiseAnd
 			}
 			break
 		}
@@ -318,6 +324,44 @@ func (s *Lexer) parseString(ch byte) (Token, error) {
 	return token, ec
 }
 
+func (s *Lexer) parseKeyword() (Token, error) {
+	var token Token
+
+	ch := s.content[s.rover]
+	if ch == 'l' {
+		if s.rover+2 < len(s.content) && s.content[s.rover+1] == 'e' && s.content[s.rover+2] == 't' {
+			var ok bool
+			if s.rover+3 == len(s.content) {
+				ok = true
+			} else {
+				typ := s.GetCharacterType(s.content[s.rover+3])
+				ok = !(typ == Letter || typ == UnderLine || typ == Number)
+			}
+			if ok {
+				token.Type = TkLet
+				s.rover += 3
+				return token, nil
+			}
+		}
+	} else if ch == 'v' {
+		if s.rover+2 < len(s.content) && s.content[s.rover+1] == 'a' && s.content[s.rover+2] == 'r' {
+			var ok bool
+			if s.rover+3 == len(s.content) {
+				ok = true
+			} else {
+				typ := s.GetCharacterType(s.content[s.rover+3])
+				ok = !(typ == Letter || typ == UnderLine || typ == Number)
+			}
+			if ok {
+				token.Type = TkVar
+				s.rover += 3
+				return token, nil
+			}
+		}
+	}
+	return token, errors.New("parseKeyword fail")
+}
+
 func (s *Lexer) NextToken() (Token, error) {
 	var token Token
 	var ec error
@@ -334,6 +378,10 @@ func (s *Lexer) NextToken() (Token, error) {
 		}
 	case UnderLine, Letter:
 		{
+			token, ec = s.parseKeyword()
+			if ec == nil {
+				break
+			}
 			token, ec = s.parseIdentifier()
 		}
 	case Operator:
@@ -355,8 +403,12 @@ func (s *Lexer) NextToken() (Token, error) {
 			token, ec = s.parseString(ch)
 		}
 	default:
-		ec = errors.New("undefined character")
-		//panic("")
+		{
+
+			ec = errors.New("undefined character")
+			//panic("")
+		}
+
 	}
 	//TEST
 	fmt.Printf("token:%s\n", string(token.Literal))

@@ -88,7 +88,7 @@ func (s *BasicParser) Expect(typ TokenType) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	if token.Type.isType(typ) {
+	if isType(token.Type, typ) {
 		s.control.AdvanceIndex(s)
 		return token, err
 	}

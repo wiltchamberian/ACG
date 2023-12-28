@@ -18,8 +18,9 @@ type Group struct {
 }
 
 type Alter struct {
-	action string
-	Groups []Group
+	action           string
+	NotDefaultAction bool
+	Groups           []Group
 }
 
 type Rule struct {
@@ -258,6 +259,7 @@ func (gp *BNFParser) Alternative() (Alter, error) {
 		if err == nil {
 			if gp.Type == GroupType_Action {
 				alt.action = string(gp.Tokens[0].Literal)
+				alt.NotDefaultAction = true
 			} else {
 				alt.Groups = append(alt.Groups, gp)
 			}

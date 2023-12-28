@@ -2,6 +2,24 @@ package parser
 
 import "unicode"
 
+type TreeType[T any] struct {
+	Value  T
+	parent *TreeType[T]
+}
+
+func (s *TreeType[T]) isType(t *TreeType[T]) bool {
+	if s != nil && t == nil {
+		return false
+	}
+	for s != t && s != nil {
+		s = s.parent
+	}
+	if s == t {
+		return true
+	}
+	return false
+}
+
 func ReverseSlice[T any](s []T) []T {
 	var r []T
 	for i := len(s) - 1; i >= 0; i-- {
@@ -84,4 +102,9 @@ func (s ArrayIter[T]) Advance(i int) int {
 
 func (s ArrayIter[T]) Get(i int) T {
 	return s.arr[i]
+}
+
+//mapping function
+func Mapping[T any](i int) int {
+	return 0
 }

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"encoding/binary"
+	"fmt"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 	OpLeEq
 	OpLShift
 	OpRShift
+	OpOr
+	OpAnd
 
 	OpBang //!
 	OpBAnd //&
@@ -54,6 +57,10 @@ var definitions = map[OpCode]*Definition{
 	OpGt:       {"OpGt", []int{}, 1},
 	OpLeEq:     {"OpLeEq", []int{}, 1},
 	OpGtEq:     {"OpGtEq", []int{}, 1},
+	OpLShift:   {"OpLShift", []int{}, 1},
+	OpRShift:   {"OpRShift", []int{}, 1},
+	OpOr:       {"OpOr", []int{}, 1},
+	OpAnd:      {"OpAnd", []int{}, 1},
 	OpBang:     {"OpBang", []int{}, 1},
 	OpBAnd:     {"OpBAnd", []int{}, 1},
 	OpBOr:      {"OpBOr", []int{}, 1},
@@ -102,23 +109,37 @@ func InstructionByteLen(opcode OpCode) int {
 }
 
 func M(nd INode) OpCode {
-	switch nd.GetLiteral() {
-	case "+":
+	switch nd.GetName() {
+	case TkAdd:
 		return OpAdd
-	case "-":
+	case TkSub:
 		return OpSub
-	case "<<":
+	case TkLShift:
 		return OpLShift
-	case ">>":
+	case TkRShift:
 		return OpRShift
-	case "<":
+	case TkLess:
 		return OpLe
-	case ">":
+	case TkGreater:
 		return OpGt
-	case "<=":
+	case TkLessEq:
 		return OpLeEq
-	case ">=":
+	case TkGreaterEq:
 		return OpGtEq
+	case TkMul:
+		return OpMul
+	case TkDiv:
+		return OpDiv
+	case TkEqual:
+		return OpEq
+	case TkNotEq:
+		return OpNotEq
+	case TkOr:
+		return OpOr
+	case TkAnd:
+		return OpAnd
 	}
+	fmt.Println("OpCode fail")
+	panic("")
 	return OpAdd
 }

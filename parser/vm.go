@@ -39,13 +39,15 @@ func (s *VM) StackTop() NkObject {
 	return s.stack[s.sp-1]
 }
 
-func (s *VM) pop() NkObject {
-	o := s.stack[s.sp-1]
-	s.sp--
-	return o
+func (s *VM) Pop() NkObject {
+	if s.sp > 0 {
+		s.sp--
+		return s.stack[s.sp]
+	}
+	return nil
 }
 
-func (s *VM) push(o NkObject) error {
+func (s *VM) Push(o NkObject) error {
 	if s.sp >= len(s.stack) {
 		return errors.New("stack overflow")
 	}
@@ -55,34 +57,37 @@ func (s *VM) push(o NkObject) error {
 }
 
 func (s *VM) popTwoIntegers() (int, int) {
-	right := s.pop()
-	left := s.pop()
+	right := s.Pop()
+	left := s.Pop()
 	return left.(*NkInteger).Value, right.(*NkInteger).Value
 }
 
 func (s *VM) popInteger() int {
-	return s.pop().(*NkInteger).Value
+	return s.Pop().(*NkInteger).Value
 }
 
 func (s *VM) pushInteger(val int) {
-	s.push(&NkInteger{Value: val})
+	s.Push(&NkInteger{Value: val})
 }
 
 func (s *VM) pushBool(val bool) {
 	if val {
-		s.push(&NkInteger{Value: 1})
+		s.Push(&NkInteger{Value: 1})
 	} else {
-		s.push(&NkInteger{Value: 0})
+		s.Push(&NkInteger{Value: 0})
 	}
 }
 
 func (s *VM) popBool() bool {
-	return s.pop().(*NkInteger).Value != 0
+	return s.Pop().(*NkInteger).Value != 0
 }
 
-func (s *VM) Run() (NkObject, error) {
+func (s *VM) IsEmpty() bool {
+	return s.sp <= 0
+}
+
+func (s *VM) Run() error {
 	var err error
-	var obj NkObject
 	ip := 0
 	l := len(s.instructions)
 	for ip < l {
@@ -91,10 +96,10 @@ func (s *VM) Run() (NkObject, error) {
 		case OpConstant:
 			{
 				index := ReadUint16(s.instructions[ip+1:])
-				err = s.push(s.constants[index])
+				err = s.Push(s.constants[index])
 				if err != nil {
 					ip += InstructionByteLen(opCode)
-					return obj, err
+					return err
 				}
 			}
 		case OpAdd:
@@ -119,11 +124,11 @@ func (s *VM) Run() (NkObject, error) {
 			}
 		case OpTrue:
 			{
-				s.push(s.trueVal)
+				s.Push(s.trueVal)
 			}
 		case OpFalse:
 			{
-				s.push(s.falseVal)
+				s.Push(s.falseVal)
 			}
 		case OpEq:
 			{
@@ -160,9 +165,16 @@ func (s *VM) Run() (NkObject, error) {
 				l := s.popBool()
 				s.pushBool(!l)
 			}
+		case OpOr:
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool((l != 0) || (r != 0))
+			}
+		case OpAnd:
+			l, r := s.popTwoIntegers()
+			s.pushBool((l != 0) && (r != 0))
 		}
 		ip += InstructionByteLen(opCode)
 	}
-	obj = s.StackTop()
-	return obj, nil
+	return nil
 }

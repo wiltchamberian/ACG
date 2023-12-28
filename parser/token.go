@@ -1,49 +1,79 @@
 package parser
 
-type UsedType = TreeType[string]
-type TokenType = *UsedType
+var parentMap = make(map[string]string)
+
+func isType(a string, b string) bool {
+	if a == b {
+		return true
+	}
+	for parentMap[a] != "" && parentMap[a] != b {
+		a = parentMap[a]
+	}
+	if parentMap[a] == b {
+		return true
+	}
+	return false
+}
+
+//type UsedType = TreeType[string]
+// type TokenType = *UsedType
+
+type TokenType = string
+
+func initType(cur string, parent string) TokenType {
+	parentMap[cur] = parent
+	return cur
+}
 
 // possible TokenType, string is used for debug
 var (
-	TkIdentifier    TokenType = &UsedType{"Identifier", nil}
-	TkTerminator    TokenType = &UsedType{"Terminator", TkIdentifier}
-	TkNonTerminator TokenType = &UsedType{"NonTerminator", TkIdentifier}
+	TkIdentifier    TokenType = initType("Identifier", "")
+	TkTerminator    TokenType = initType("Terminator", TkIdentifier)
+	TkNonTerminator TokenType = initType("NonTerminator", TkIdentifier)
 
-	TkKeyword TokenType = &UsedType{"Keyword", nil}
-	TkNumber  TokenType = &UsedType{"Number", nil}
-	TkString  TokenType = &UsedType{"String", nil}
-	TkEof     TokenType = &UsedType{"Eof", nil}
+	TkKeyword TokenType = initType("Keyword", "")
+	TkLet     TokenType = initType("let", TkKeyword)
+	TkVar     TokenType = initType("var", TkKeyword)
 
-	TkOperator  TokenType = &UsedType{"Operator", nil}
-	TkAdd       TokenType = &UsedType{"Add", TkOperator}
-	TkSub       TokenType = &UsedType{"Sub", TkOperator}
-	TkMul       TokenType = &UsedType{"Mul", TkOperator}
-	TkDiv       TokenType = &UsedType{"Div", TkOperator}
-	TkAssign    TokenType = &UsedType{"Assign", TkOperator}
-	TkBitwiseOr TokenType = &UsedType{"BitwiseOr", TkOperator}
-	TkPlusEq    TokenType = &UsedType{"PlusEq", TkOperator}
-	TkSubEq     TokenType = &UsedType{"SubEq", TkOperator}
-	TkMulEq     TokenType = &UsedType{"MulEq", TkOperator}
-	TkDivEq     TokenType = &UsedType{"DivEq", TkOperator}
-	TkLess      TokenType = &UsedType{"Less", TkOperator}
-	TkGreater   TokenType = &UsedType{"Greater", TkOperator}
-	TkLessEq    TokenType = &UsedType{"LessEq", TkOperator}
-	TkGreaterEq TokenType = &UsedType{"GreaterEq", TkOperator}
-	TkEqual     TokenType = &UsedType{"Equal", TkOperator}
-	TkNotEq     TokenType = &UsedType{"NotEq", TkOperator}
+	TkNumber TokenType = initType("Number", "")
+	TkString TokenType = initType("String", "")
+	TkEof    TokenType = initType("Eof", "")
 
-	TkDelimiter TokenType = &UsedType{"Delimiter", nil}
-	TkComma     TokenType = &UsedType{"Comma", TkDelimiter}
-	TkSemicolon TokenType = &UsedType{"Semicolon", TkDelimiter}
-	TkLParen    TokenType = &UsedType{"LParen", TkDelimiter}
-	TkRParen    TokenType = &UsedType{"RParen", TkDelimiter}
-	TkLBrace    TokenType = &UsedType{"LBrace", TkDelimiter}
-	TkRBrace    TokenType = &UsedType{"RBrace", TkDelimiter}
-	TkLBracket  TokenType = &UsedType{"LBracket", TkDelimiter}
-	TkRBracket  TokenType = &UsedType{"RBracket", TkDelimiter}
-	TkColon     TokenType = &UsedType{"Colon", TkDelimiter}
+	TkOperator   TokenType = initType("Operator", "")
+	TkAdd        TokenType = initType("+", TkOperator)
+	TkSub        TokenType = initType("-", TkOperator)
+	TkMul        TokenType = initType("*", TkOperator)
+	TkDiv        TokenType = initType("/", TkOperator)
+	TkAssign     TokenType = initType("=", TkOperator)
+	TkBitwiseOr  TokenType = initType("|", TkOperator)
+	TkBitwiseAnd TokenType = initType("&", TkOperator)
+	TkPlusEq     TokenType = initType("+=", TkOperator)
+	TkSubEq      TokenType = initType("-=", TkOperator)
+	TkMulEq      TokenType = initType("*=", TkOperator)
+	TkDivEq      TokenType = initType("/=", TkOperator)
+	TkLess       TokenType = initType("<", TkOperator)
+	TkGreater    TokenType = initType(">", TkOperator)
+	TkLessEq     TokenType = initType("<=", TkOperator)
+	TkGreaterEq  TokenType = initType(">=", TkOperator)
+	TkEqual      TokenType = initType("==", TkOperator)
+	TkNotEq      TokenType = initType("!=", TkOperator)
+	TkLShift     TokenType = initType("<<", TkOperator)
+	TkRShift     TokenType = initType(">>", TkOperator)
+	TkOr         TokenType = initType("||", TkOperator)
+	TkAnd        TokenType = initType("&&", TkOperator)
 
-	TkAction TokenType = &UsedType{"Action", nil}
+	TkDelimiter TokenType = initType("Delimiter", "")
+	TkComma     TokenType = initType(",", TkDelimiter)
+	TkSemicolon TokenType = initType(";", TkDelimiter)
+	TkLParen    TokenType = initType("(", TkDelimiter)
+	TkRParen    TokenType = initType(")", TkDelimiter)
+	TkLBrace    TokenType = initType("{", TkDelimiter)
+	TkRBrace    TokenType = initType("}", TkDelimiter)
+	TkLBracket  TokenType = initType("[", TkDelimiter)
+	TkRBracket  TokenType = initType("]", TkDelimiter)
+	TkColon     TokenType = initType(":", TkDelimiter)
+
+	TkAction TokenType = initType("Action", "")
 )
 
 type Token struct {
@@ -59,7 +89,7 @@ func (s *Token) SetName(name string) {
 }
 
 func (s *Token) GetName() string {
-	return string(s.Type.Value)
+	return string(s.Type)
 }
 
 func (s *Token) GetChildren() []INode {

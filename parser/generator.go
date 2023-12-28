@@ -28,7 +28,7 @@ func NewRGenerator() *Generator {
 func (s *Generator) generateItem(nodesName string, item *Token) {
 	literal := string(item.Literal)
 	//senmantic
-	if item.Type.isType(TkString) {
+	if isType(item.Type, TkString) {
 		literal = fmt.Sprintf("\"%s\"", literal[1:len(literal)-1])
 		s.Printf("Append(&%s,s.ExpectValueW(%s))", nodesName, literal)
 	} else if unicode.IsUpper(rune(literal[0])) {
@@ -176,13 +176,26 @@ func (s *Generator) PrintStructHead(name string) {
 }
 
 func (s *Generator) PrintAltEnd(rule Rule, i int) {
-	//reverse nodes
 	s.ctl.Print(s)
-	s.Printf("\treturn Ret{&Node{\"%s\",nodes,nil,%d},nil}\n", string(rule.Name), i)
+	s.Printf("\tif(len(nodes)==1 && (!nodes[0].IsTerminal())){\n")
+	s.Printf("\t\treturn Ret{nodes[0],nil}\n")
+	s.Printf("\t} else{\n")
+	s.Printf("\t\treturn Ret{&Node{\"%s\",nodes,nil,%d,\"%s\"},nil}\n", string(rule.Name), i, rule.Alts[i].action)
+
+	s.Printf("\t}\n")
 	s.Printf("} else {\n")
 	s.Printf("\ts.Reset(pos)\n")
 	s.Printf("\tnodes = []INode{}\n")
 	s.Printf("}\n")
+
+	// //reverse nodes
+	// s.ctl.Print(s)
+	// s.Printf("\t\treturn Ret{&Node{\"%s\",nodes,nil,%d,\"%s\"},nil}\n", string(rule.Name), i, rule.Alts[i].action)
+	// s.Printf("} else {\n")
+	// s.Printf("\ts.Reset(pos)\n")
+	// s.Printf("\tnodes = []INode{}\n")
+	// s.Printf("}\n")
+
 }
 
 func (s *Generator) Generate_rparser(name string, bnf BNFRules) error {

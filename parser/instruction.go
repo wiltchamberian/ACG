@@ -5,6 +5,16 @@ import (
 	"fmt"
 )
 
+type OpCode = byte
+
+type Instructions = []byte
+
+type Definition struct {
+	Name    string
+	Widths  []int
+	ByteLen int
+}
+
 const (
 	OpConstant = iota
 	OpAdd
@@ -31,17 +41,10 @@ const (
 	OpPos  //+
 	OpNeg  //-
 	OpAddr //&
+
+	OpGlobalSet
+	OpGlobalGet
 )
-
-type OpCode = byte
-
-type Instructions = []byte
-
-type Definition struct {
-	Name    string
-	Widths  []int
-	ByteLen int
-}
 
 var definitions = map[OpCode]*Definition{
 	OpConstant: {"OpConstant", []int{2}, 3},
@@ -67,6 +70,9 @@ var definitions = map[OpCode]*Definition{
 	OpPos:      {"OpPos", []int{}, 1},
 	OpNeg:      {"OpNeg", []int{}, 1},
 	OpAddr:     {"OpAddr", []int{}, 1},
+
+	OpGlobalSet: {"OpGlobalSet", []int{2}, 3},
+	OpGlobalGet: {"OpGlobalGet", []int{2}, 3},
 }
 
 func LookUp(opcode OpCode) *Definition {

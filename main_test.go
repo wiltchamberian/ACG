@@ -30,9 +30,17 @@ func TestHelloEmpty(t *testing.T) {
 123-10/(3-1)+20;
 (13*20 + (((127-123)*(5+18*4)-27)*13-(25+29*10)))*10-120;
 (1||0&&1) + (1||1) + (0||1) + (0&&1);
+-13-+5----4+---(---(---3));
+((3+ 4*(8-2)) < 0+13)+
+	2*((3*(4-5+13)/2 *13-7)-13) + 
+	(77*13==15) +
+	(13-29)*(10-2)/2 +
+	(123-10/(3-1)+20) +
+	((13*20 + (((127-123)*(5+18*4)-27)*13-(25+29*10)))*10-120)+
+	((1||0&&1) + (1||1) + (0||1) + (0&&1))+
+	(-13-+5----4+---(---(---3)));
 `
-
-	answers := []int{3, 35860, 138, -64, 0, 428, 0}
+	answers := []int{36348, -17, 3, 35860, 138, -64, 0, 428, 0}
 
 	var nika = NewNikaParser()
 	err := nika.Tokenize(prog)
@@ -52,7 +60,7 @@ func TestHelloEmpty(t *testing.T) {
 	travel.DepthFirstTravel(ret.Nd, &printer)
 	printer.CloseFile()
 
-	var compiler NikaCompiler
+	compiler := NewNikaCompiler()
 	compiler.Compile(ret.Nd)
 	vm := NewVM(compiler)
 	vm.Run()

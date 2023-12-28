@@ -15,12 +15,15 @@ type VM struct {
 	stack        []NkObject
 	sp           int
 
+	//global variable
+	globals []NkObject
+
 	//global
 	trueVal  NkObject
 	falseVal NkObject
 }
 
-func NewVM(compiler NikaCompiler) *VM {
+func NewVM(compiler *NikaCompiler) *VM {
 	var vm VM
 	vm.constants = compiler.constants
 	vm.instructions = compiler.instructions
@@ -160,6 +163,11 @@ func (s *VM) Run() error {
 				l, r := s.popTwoIntegers()
 				s.pushBool(l >= r)
 			}
+		case OpNeg:
+			{
+				l := s.popInteger()
+				s.pushInteger(-l)
+			}
 		case OpBang:
 			{
 				l := s.popBool()
@@ -171,8 +179,20 @@ func (s *VM) Run() error {
 				s.pushBool((l != 0) || (r != 0))
 			}
 		case OpAnd:
-			l, r := s.popTwoIntegers()
-			s.pushBool((l != 0) && (r != 0))
+			{
+				l, r := s.popTwoIntegers()
+				s.pushBool((l != 0) && (r != 0))
+			}
+		case OpGlobalSet:
+			{
+				index := ReadUint16(s.instructions[ip+1:])
+				s.globals[index] = s.Pop()
+			}
+		case OpGlobalGet:
+			{
+				index := ReadUint16(s.instructions[ip+1:])
+				s.Push(s.globals[index])
+			}
 		}
 		ip += InstructionByteLen(opCode)
 	}

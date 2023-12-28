@@ -352,6 +352,12 @@ func (s *Generator) PrintCompiler(name string, bnf BNFRules) error {
 	s.Printf("type %s struct {\n", name)
 	s.Printf("\tCompiler\n")
 	s.Print("}\n\n")
+
+	s.Printf("func New%s() *%s{\n", name, name)
+	s.Printf("\tvar result %s\n", name)
+	s.Printf("\tresult.Compiler.InitCompiler()\n")
+	s.Printf("\treturn &result\n")
+	s.Printf("}\n\n")
 	s.writer.Flush()
 
 	s.Printf("func (s *%s) C(node INode) bool {\n", name)

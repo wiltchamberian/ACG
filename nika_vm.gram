@@ -26,7 +26,7 @@ stmt: def
 def: 
       'let' Identifier Identifier ';'
       | 'let' Identifier '=' expr ';' 
-      //$Do(e.A(v[1]),s.C(v[3]),s.emit(OpAssign)
+      //$s.emit(OpGlobalSet, s.def(v[1]).index)$
       | 'var' Identifier '=' expr ';'
       | 'var' Identifier Identifier ';'
       ;
@@ -121,13 +121,13 @@ uexpr:
         '++' uexpr
         | '--' uexpr
         | (uop)* postexpr
-        $s.C(v[l-1])$
+        $s.C(v[l-1]);for i:=l-2;i>=0;i-- {s.C(v[i])}$
         ;
 
 uop     : '&'  $s.emit(OpAddr)$
         //| '*'  
-        //| '+'
-        //| '-'
+        | '+' 
+        | '-' $s.emit(OpNeg)$
         | '~'
         | '!' $s.emit(OpBang)$
         | '++'
@@ -139,6 +139,7 @@ postexpr:
         ;
 
 atom:   Identifier 
+        //$s.emit(OpGlobalGet, s.res(v[0]).index)$
         | 'true' $s.emit(OpTrue)$
         | 'false' $s.emit(OpFalse)$
         | Number

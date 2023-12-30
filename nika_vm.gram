@@ -19,6 +19,7 @@ stmt: def
       | func
       //| assign ';' //moved to expr
       | exprs ';'
+      $s.C(v[0]);s.pop()$
       | if_
       | for_
       ;
@@ -27,7 +28,7 @@ def:
       'let' Identifier Identifier ';'
       | 'let' Identifier '=' expr ';' 
       | 'var' Identifier '=' expr ';'
-      $s.C(v[3]);s.emit(OpGlobalSet, s.def(v[1]).index)$
+      $s.C(v[3]);s.emit(OpGlobalSet, s.def(v[1]).index);s.pop()$
       | 'var' Identifier Identifier ';'
       ;
 
@@ -50,7 +51,7 @@ param : Identifier Identifier
 
 exprs: 
       (expr ',')* expr
-      $for _,t := range v {s.C(t)}$
+      $for i:=0;i<l-1;i+=2{s.C(v[i]);s.pop()};s.C(v[l-1])$
       ;
     
 expr: (Identifier aop)* cond
@@ -166,12 +167,12 @@ aop:   '='
 
 if_: 
         'if' expr '{' stmts '}' elif_
-        $s.C(v[1]);pos := s.jumpNt();s.C(v[3]);s.push(s.jump());s.replace(pos);s.C(v[5])$
+        $s.C(v[1]);pos := s.jumpNt();s.C(v[3]);s.pushIndex(s.jump());s.replace(pos);s.C(v[5])$
         ;
 
 elif_:   
         ('elif' expr '{' stmts '}')* else_
-        $for i:=1; i<l;i+=5{s.C(v[i]);pos := s.jumpNt();s.C(v[i+2]);s.push(s.jump());s.replace(pos)};s.C(v[l-1])$
+        $for i:=1; i<l;i+=5{s.C(v[i]);pos := s.jumpNt();s.C(v[i+2]);s.pushIndex(s.jump());s.replace(pos)};s.C(v[l-1])$
         ;
 
 else_:   
@@ -182,5 +183,6 @@ else_:
         ;
 
 for_: 
-        'for' stmt ';' expr ';' expr '{' stmts '}' 
+        'for' stmt  expr ';' expr '{' stmts '}' 
+        $s.C(v[1]);pos:=s.Pos(); s.C(v[2]); index:=s.jumpNt(); s.C(v[6]);s.C(v[4]);s.pop();s.jumpTo(pos);s.replace(index)$
         ;

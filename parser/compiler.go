@@ -46,11 +46,11 @@ type Compiler struct {
 }
 
 //push index of instruction
-func (s *Compiler) push(index int) {
+func (s *Compiler) pushIndex(index int) {
 	s.poses = append(s.poses, index)
 }
 
-func (s *Compiler) pop() int {
+func (s *Compiler) popIndex() int {
 	x := s.poses[len(s.poses)-1]
 	s.poses = s.poses[0 : len(s.poses)-1]
 	return x
@@ -75,6 +75,14 @@ func (s *Compiler) emit(opcode OpCode, operands ...int) int {
 	return pos
 }
 
+func (s *Compiler) pop() {
+	s.emit(OpPop)
+}
+
+func (s *Compiler) Pos() int {
+	return len(s.instructions)
+}
+
 //jump not true
 func (s *Compiler) jumpNt() int {
 	return s.emit(OpJumpNotTrue, s.currentPos())
@@ -82,6 +90,10 @@ func (s *Compiler) jumpNt() int {
 
 func (s *Compiler) jump() int {
 	return s.emit(OpJump, s.currentPos())
+}
+
+func (s *Compiler) jumpTo(pos int) int {
+	return s.emit(OpJump, pos)
 }
 
 func (s *Compiler) addInstruction(ins []byte) int {
@@ -113,7 +125,7 @@ func (s *Compiler) replace(pos int) {
 func (s *Compiler) replaceAll() {
 	l := len(s.poses)
 	for i := 0; i < l; i++ {
-		s.replace(s.pop())
+		s.replace(s.popIndex())
 	}
 }
 

@@ -348,16 +348,14 @@ func (s *Lexer) parseTheKeyword(str string) (Token, error) {
 	return token, errors.New("keyword fail")
 }
 
-func (s *Lexer) parseKeyword() (Token, error) {
-	var token Token
-	var err error
+func (s *Lexer) parseKeyword() (token Token, err error) {
 	token, err = s.parseTheKeyword(TkLet)
 	if err == nil {
-		return token, err
+		return
 	}
 	token, err = s.parseTheKeyword(TkVar)
 	if err == nil {
-		return token, err
+		return
 	}
 	token, err = s.parseTheKeyword(TkIf)
 	if err == nil {
@@ -365,7 +363,11 @@ func (s *Lexer) parseKeyword() (Token, error) {
 	}
 	token, err = s.parseTheKeyword(TkElse)
 	if err == nil {
-		return token, err
+		return
+	}
+	token, err = s.parseTheKeyword(TkFor)
+	if err == nil {
+		return
 	}
 	return token, errors.New("parseKeyword fail")
 }

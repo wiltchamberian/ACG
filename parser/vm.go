@@ -240,6 +240,10 @@ func (s *VM) Run() error {
 			{
 				ip = int(ReadUint16(s.instructions[ip+1:])) - InstructionByteLen(opCode)
 			}
+		case OpPop:
+			{
+				s.Pop()
+			}
 		}
 		ip += InstructionByteLen(opCode)
 	}

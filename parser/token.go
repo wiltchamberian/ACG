@@ -38,6 +38,7 @@ var (
 	TkVar     TokenType = initType("var", TkKeyword)
 	TkIf      TokenType = initType("if", TkKeyword)
 	TkElse    TokenType = initType("else", TkKeyword)
+	TkFor     TokenType = initType("for", TkKeyword)
 
 	TkNumber TokenType = initType("Number", "")
 	TkString TokenType = initType("String", "")

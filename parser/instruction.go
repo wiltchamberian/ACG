@@ -44,6 +44,9 @@ const (
 
 	OpGlobalSet
 	OpGlobalGet
+
+	OpJumpNotTrue //conditional jump
+	OpJump        //jump
 )
 
 var definitions = map[OpCode]*Definition{
@@ -73,6 +76,9 @@ var definitions = map[OpCode]*Definition{
 
 	OpGlobalSet: {"OpGlobalSet", []int{2}, 3},
 	OpGlobalGet: {"OpGlobalGet", []int{2}, 3},
+
+	OpJumpNotTrue: {"OpJumpNotTrue", []int{2}, 3},
+	OpJump:        {"OpJump", []int{2}, 3},
 }
 
 func LookUp(opcode OpCode) *Definition {
@@ -147,5 +153,4 @@ func M(nd INode) OpCode {
 	}
 	fmt.Println("OpCode fail")
 	panic("")
-	return OpAdd
 }

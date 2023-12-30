@@ -15,23 +15,23 @@ stmts: (stmt)*
       ;
 
 stmt: def
-      | struct
+      | stru
       | func
       //| assign ';' //moved to expr
       | exprs ';'
-      | if
-      | for
+      | if_
+      | for_
       ;
 
 def: 
       'let' Identifier Identifier ';'
       | 'let' Identifier '=' expr ';' 
-      //$s.emit(OpGlobalSet, s.def(v[1]).index)$
       | 'var' Identifier '=' expr ';'
+      $s.C(v[3]);s.emit(OpGlobalSet, s.def(v[1]).index)$
       | 'var' Identifier Identifier ';'
       ;
 
-struct: 
+stru  : 
       'struct' Identifier '{' (member)* '}' 
       ;
 
@@ -54,6 +54,7 @@ exprs:
       ;
     
 expr: (Identifier aop)* cond
+      $s.C(v[l-1]); for i:=l-3;i>=0;i-=2{s.emit(OpGlobalSet, s.res(v[i]).index)}$
       ;
 
 /*eliminate right recursion
@@ -139,7 +140,7 @@ postexpr:
         ;
 
 atom:   Identifier 
-        //$s.emit(OpGlobalGet, s.res(v[0]).index)$
+        $s.emit(OpGlobalGet, s.res(v[0]).index)$
         | 'true' $s.emit(OpTrue)$
         | 'false' $s.emit(OpFalse)$
         | Number
@@ -163,7 +164,23 @@ aop:   '='
       |'||='
       ;
 
-if: 
-        'if' expr '{' stmts '}' ;
-for: 
-        'for' stmt ';' expr ';' expr '{' stmts '}' ;
+if_: 
+        'if' expr '{' stmts '}' elif_
+        $s.C(v[1]);pos := s.jumpNt();s.C(v[3]);s.push(s.jump());s.replace(pos);s.C(v[5])$
+        ;
+
+elif_:   
+        ('elif' expr '{' stmts '}')* else_
+        $for i:=1; i<l;i+=5{s.C(v[i]);pos := s.jumpNt();s.C(v[i+2]);s.push(s.jump());s.replace(pos)};s.C(v[l-1])$
+        ;
+
+else_:   
+        'else' '{' stmts '}'
+        $s.C(v[2]); s.replaceAll()$
+        | Empty
+        $s.replaceAll()$
+        ;
+
+for_: 
+        'for' stmt ';' expr ';' expr '{' stmts '}' 
+        ;

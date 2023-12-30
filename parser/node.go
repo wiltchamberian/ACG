@@ -187,3 +187,7 @@ func Append(nodes *[]INode, ret Ret) bool {
 	}
 	return false
 }
+
+func NewEmpty() Ret {
+	return Ret{Nd: EmptyToken, Err: nil}
+}

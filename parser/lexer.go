@@ -324,40 +324,48 @@ func (s *Lexer) parseString(ch byte) (Token, error) {
 	return token, ec
 }
 
+func (s *Lexer) parseTheKeyword(str string) (Token, error) {
+	var token Token
+	l := len(str)
+	if s.rover+l >= len(s.content) {
+		return token, errors.New("keyword fail")
+	}
+	ok := true
+	for i := 0; i < l; i++ {
+		if str[i] != s.content[s.rover+i] {
+			ok = false
+			break
+		}
+	}
+	if ok {
+		typ := s.GetCharacterType(s.content[s.rover+l])
+		ok = !(typ == Letter || typ == UnderLine || typ == Number)
+		if ok {
+			s.rover += len(str)
+			return Token{Type: str, Literal: s.content[s.rover-len(str) : s.rover]}, nil
+		}
+	}
+	return token, errors.New("keyword fail")
+}
+
 func (s *Lexer) parseKeyword() (Token, error) {
 	var token Token
-
-	ch := s.content[s.rover]
-	if ch == 'l' {
-		if s.rover+2 < len(s.content) && s.content[s.rover+1] == 'e' && s.content[s.rover+2] == 't' {
-			var ok bool
-			if s.rover+3 == len(s.content) {
-				ok = true
-			} else {
-				typ := s.GetCharacterType(s.content[s.rover+3])
-				ok = !(typ == Letter || typ == UnderLine || typ == Number)
-			}
-			if ok {
-				token.Type = TkLet
-				s.rover += 3
-				return token, nil
-			}
-		}
-	} else if ch == 'v' {
-		if s.rover+2 < len(s.content) && s.content[s.rover+1] == 'a' && s.content[s.rover+2] == 'r' {
-			var ok bool
-			if s.rover+3 == len(s.content) {
-				ok = true
-			} else {
-				typ := s.GetCharacterType(s.content[s.rover+3])
-				ok = !(typ == Letter || typ == UnderLine || typ == Number)
-			}
-			if ok {
-				token.Type = TkVar
-				s.rover += 3
-				return token, nil
-			}
-		}
+	var err error
+	token, err = s.parseTheKeyword(TkLet)
+	if err == nil {
+		return token, err
+	}
+	token, err = s.parseTheKeyword(TkVar)
+	if err == nil {
+		return token, err
+	}
+	token, err = s.parseTheKeyword(TkIf)
+	if err == nil {
+		return token, err
+	}
+	token, err = s.parseTheKeyword(TkElse)
+	if err == nil {
+		return token, err
 	}
 	return token, errors.New("parseKeyword fail")
 }

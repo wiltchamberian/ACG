@@ -28,10 +28,13 @@ func NewRGenerator() *Generator {
 func (s *Generator) generateItem(nodesName string, item *Token) {
 	literal := string(item.Literal)
 	//senmantic
-	if isType(item.Type, TkString) {
+	if isType(item.Type, TkString) { //字符串终结符
 		literal = fmt.Sprintf("\"%s\"", literal[1:len(literal)-1])
 		s.Printf("Append(&%s,s.ExpectValueW(%s))", nodesName, literal)
-	} else if unicode.IsUpper(rune(literal[0])) {
+	} else if literal == "Empty" { //空终结符
+		//s.Printf("Append(&%s, NewEmpty())", nodesName)
+		s.Printf("true") //不增加节点，因为后续也不直接用到该节点
+	} else if unicode.IsUpper(rune(literal[0])) { //普通终结符
 		s.Printf("Append(&%s,s.ExpectW(Tk%s))", nodesName, literal)
 	} else {
 		s.Printf("Append(&%s,s.%s())", nodesName, strings.ToTitle(literal))

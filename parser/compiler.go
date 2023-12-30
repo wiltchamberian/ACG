@@ -1,5 +1,7 @@
 package parser
 
+import "fmt"
+
 type Scope = string
 
 const (
@@ -23,14 +25,15 @@ func NewSymbolTable() *SymbolTable {
 }
 
 func (s *SymbolTable) def(node INode) Symbol {
-	symbol := Symbol{node.GetName(), GlobalScope, s.counter}
-	s.mapping[node.GetName()] = symbol
+	literal := node.GetLiteral()
+	symbol := Symbol{literal, GlobalScope, s.counter}
+	s.mapping[literal] = symbol
 	s.counter++
 	return symbol
 }
 
 func (s *SymbolTable) res(node INode) Symbol {
-	return s.mapping[node.GetName()]
+	return s.mapping[node.GetLiteral()]
 }
 
 // a handwrite compilerl
@@ -38,10 +41,24 @@ type Compiler struct {
 	instructions Instructions
 	constants    []NkObject
 	symbolTable  *SymbolTable
+
+	poses []int
 }
 
-func (compiler *Compiler) InitCompiler() {
-	compiler.symbolTable = NewSymbolTable()
+//push index of instruction
+func (s *Compiler) push(index int) {
+	s.poses = append(s.poses, index)
+}
+
+func (s *Compiler) pop() int {
+	x := s.poses[len(s.poses)-1]
+	s.poses = s.poses[0 : len(s.poses)-1]
+	return x
+}
+
+func (s *Compiler) InitCompiler() {
+	s.symbolTable = NewSymbolTable()
+	s.poses = make([]int, 0)
 }
 
 func (s *Compiler) addConstant(obj NkObject) int {
@@ -51,9 +68,20 @@ func (s *Compiler) addConstant(obj NkObject) int {
 }
 
 func (s *Compiler) emit(opcode OpCode, operands ...int) int {
+	//for test
+	fmt.Printf("emit:%d\n", opcode)
 	ins := Make(opcode, operands...)
 	pos := s.addInstruction(ins)
 	return pos
+}
+
+//jump not true
+func (s *Compiler) jumpNt() int {
+	return s.emit(OpJumpNotTrue, s.currentPos())
+}
+
+func (s *Compiler) jump() int {
+	return s.emit(OpJump, s.currentPos())
 }
 
 func (s *Compiler) addInstruction(ins []byte) int {
@@ -62,10 +90,33 @@ func (s *Compiler) addInstruction(ins []byte) int {
 	return pos
 }
 
-func (s *Compiler) def(node INode) {
-	s.symbolTable.def(node)
+func (s *Compiler) def(node INode) Symbol {
+	return s.symbolTable.def(node)
 }
 
-func (s *Compiler) res(node INode) {
-	s.symbolTable.res(node)
+func (s *Compiler) res(node INode) Symbol {
+	return s.symbolTable.res(node)
+}
+
+func (s *Compiler) replaceInstruction(pos int, ins []byte) {
+	for i := 0; i < len(ins); i++ {
+		s.instructions[pos+i] = ins[i]
+	}
+}
+
+func (s *Compiler) replace(pos int) {
+	op := s.instructions[pos]
+	newIns := Make(op, len(s.instructions))
+	s.replaceInstruction(pos, newIns)
+}
+
+func (s *Compiler) replaceAll() {
+	l := len(s.poses)
+	for i := 0; i < l; i++ {
+		s.replace(s.pop())
+	}
+}
+
+func (s *Compiler) currentPos() int {
+	return len(s.instructions)
 }

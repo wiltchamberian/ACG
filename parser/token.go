@@ -31,9 +31,13 @@ var (
 	TkTerminator    TokenType = initType("Terminator", TkIdentifier)
 	TkNonTerminator TokenType = initType("NonTerminator", TkIdentifier)
 
+	TkEmpty TokenType = initType("Empty", "") //空终结符
+
 	TkKeyword TokenType = initType("Keyword", "")
 	TkLet     TokenType = initType("let", TkKeyword)
 	TkVar     TokenType = initType("var", TkKeyword)
+	TkIf      TokenType = initType("if", TkKeyword)
+	TkElse    TokenType = initType("else", TkKeyword)
 
 	TkNumber TokenType = initType("Number", "")
 	TkString TokenType = initType("String", "")
@@ -80,6 +84,8 @@ type Token struct {
 	Type    TokenType
 	Literal []byte
 }
+
+var EmptyToken = &Token{Type: TkEmpty}
 
 func (s *Token) GetLiteral() string {
 	return string(s.Literal)

@@ -183,7 +183,10 @@ func (s *Generator) PrintAltEnd(rule Rule, i int) {
 	s.Printf("\tif(len(nodes)==1 && (!nodes[0].IsTerminal())){\n")
 	s.Printf("\t\treturn Ret{nodes[0],nil}\n")
 	s.Printf("\t} else{\n")
-	s.Printf("\t\treturn Ret{&Node{\"%s\",nodes,nil,%d,\"%s\"},nil}\n", string(rule.Name), i, rule.Alts[i].action)
+
+	//s.Printf("\t\treturn Ret{&Node{\"%s\",nodes,nil,%d,\"%s\"},nil}\n", string(rule.Name), i, rule.Alts[i].action)
+	nodeName := fmt.Sprintf("%s%d", CapitalizeFirstLetter(rule.Name), i)
+	s.Printf("\t\treturn Ret{&%s{Node{\"%s\",nodes,nil,%d,\"%s\"}},nil}\n", nodeName, rule.Name, i, rule.Alts[i].action)
 
 	s.Printf("\t}\n")
 	s.Printf("} else {\n")
@@ -340,7 +343,7 @@ func (s *Generator) Generate_eval(name string, bnf BNFRules) error {
 	return nil
 }
 
-func (s *Generator) PrintCompiler(name string, bnf BNFRules) error {
+func (s *Generator) PrintCompiler_backup(name string, bnf BNFRules) error {
 	rules := bnf.Rules
 	var err error
 	err = s.OpenFile(s.outputPath)
@@ -401,6 +404,78 @@ func (s *Generator) PrintCompiler(name string, bnf BNFRules) error {
 	s.Printf("}\n")
 
 	s.writer.Flush()
+
+	return nil
+}
+
+func (s *Generator) PrintCompiler(name string, bnf BNFRules) error {
+	var err error
+	err = s.OpenFile(s.outputPath)
+	if err != nil {
+		return err
+	}
+	defer s.CloseFile()
+
+	s.Printf("package parser\n\n")
+	//s.Printf("import \"strconv\"\n\n")
+	//s.Printf("import \"errors\"\n")
+	s.Printf("type %s struct {\n", name)
+	s.Printf("\tCompiler\n")
+	s.Print("}\n\n")
+
+	s.Printf("func New%s() *%s{\n", name, name)
+	s.Printf("\tvar result %s\n", name)
+	s.Printf("\tresult.Compiler.InitCompiler()\n")
+	s.Printf("\treturn &result\n")
+	s.Printf("}\n\n")
+	s.writer.Flush()
+
+	s.Printf("func (s *%s) C(node INode) error {\n", name)
+	s.AddTab()
+	s.Printf("return node.Compile(s)\n")
+	s.SubTab()
+	s.Printf("}\n")
+
+	s.writer.Flush()
+
+	return nil
+}
+
+func (s *Generator) PrintNodes(name string, bnf BNFRules) error {
+	rules := bnf.Rules
+	err := s.OpenFile(s.outputPath)
+	if err != nil {
+		return err
+	}
+	defer s.CloseFile()
+
+	s.PrintPackage("parser")
+
+	for _, rule := range rules {
+		cap := CapitalizeFirstLetter(rule.Name)
+		// s.PrintInterfaceHead(cap)
+		// s.Print("Compile() error\n")
+		// s.PrintInterfaceEnd()
+		for i, alt := range rule.Alts {
+			struName := fmt.Sprintf("%s%d", cap, i)
+			s.FileWriter.PrintStructHead(struName)
+			s.Print("Node\n")
+			s.PrintStructEnd()
+			s.Printf("func (t *%s)Compile(s *%s) error{\n", struName, name)
+			s.AddTab()
+
+			if alt.action != "" {
+				s.Printf("v := t.GetChildren()\n")
+				s.Printf("l := len(v)\n")
+				s.Printf("%s\n", alt.action)
+				s.Printf("Do(v, l)\n") //shut up the compiler!
+			}
+			s.Printf("return nil\n")
+
+			s.SubTab()
+			s.PrintEnd()
+		}
+	}
 
 	return nil
 }

@@ -15,6 +15,8 @@ type INode interface {
 	IsTerminal() bool
 	Select() int //记录该节点在展开时走到哪个alternative分支
 	//Action() string //记录该节点展开时走到那个分支的action
+
+	Compile(s *NikaCompiler) error
 }
 
 func NodeCount(inode INode) int {
@@ -72,6 +74,10 @@ func (s *Node) Select() int {
 
 func (s *Node) IsTerminal() bool {
 	return false
+}
+
+func (s *Node) Compile(c *NikaCompiler) error {
+	return nil
 }
 
 func TreePrint(root INode) {

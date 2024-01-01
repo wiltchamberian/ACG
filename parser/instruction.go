@@ -48,7 +48,8 @@ const (
 	OpJumpNotTrue //conditional jump
 	OpJump        //jump
 
-	OpPop //pop the last element on stack
+	OpPop  //pop the last element on stack
+	OpPopd //pop the last element and put it on debug stack
 )
 
 var definitions = map[OpCode]*Definition{
@@ -82,7 +83,8 @@ var definitions = map[OpCode]*Definition{
 	OpJumpNotTrue: {"OpJumpNotTrue", []int{2}, 3},
 	OpJump:        {"OpJump", []int{2}, 3},
 
-	OpPop: {"OpPop", []int{}, 1},
+	OpPop:  {"OpPop", []int{}, 1},
+	OpPopd: {"OpPopd", []int{}, 1},
 }
 
 func LookUp(opcode OpCode) *Definition {

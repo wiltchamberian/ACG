@@ -79,6 +79,10 @@ func (s *Compiler) pop() {
 	s.emit(OpPop)
 }
 
+func (s *Compiler) popd() {
+	s.emit(OpPopd)
+}
+
 func (s *Compiler) Pos() int {
 	return len(s.instructions)
 }

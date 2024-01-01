@@ -3,7 +3,6 @@ package parser
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 )
 
 func ReadUint16(ins Instructions) uint16 {
@@ -24,6 +23,9 @@ type VM struct {
 	//global
 	trueVal  NkObject
 	falseVal NkObject
+
+	//debug
+	DebugStack []NkObject
 }
 
 func NewVM(compiler *NikaCompiler) *VM {
@@ -56,10 +58,6 @@ func (s *VM) Back() NkObject {
 func (s *VM) Pop() NkObject {
 	if s.sp > 0 {
 		s.sp--
-
-		//TEST
-		fmt.Printf("pop:%s\n", s.stack[s.sp].ToString())
-
 		return s.stack[s.sp]
 	}
 	return nil
@@ -70,7 +68,7 @@ func (s *VM) Push(o NkObject) error {
 		return errors.New("stack overflow")
 	}
 	//TEST
-	fmt.Printf("push:%s\n", o.ToString())
+	//fmt.Printf("push:%s\n", o.ToString())
 
 	s.stack[s.sp] = o
 	s.sp++
@@ -243,6 +241,11 @@ func (s *VM) Run() error {
 		case OpPop:
 			{
 				s.Pop()
+			}
+		case OpPopd:
+			{
+				obj := s.Pop()
+				s.DebugStack = append(s.DebugStack, obj)
 			}
 		}
 		ip += InstructionByteLen(opCode)

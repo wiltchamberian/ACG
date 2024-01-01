@@ -19,7 +19,7 @@ stmt: def
       | func
       //| assign ';' //moved to expr
       | exprs ';'
-      $s.C(v[0]);s.pop()$
+      $s.C(v[0]);s.popd()$
       | if_
       | for_
       ;
@@ -28,7 +28,7 @@ def:
       'let' Identifier Identifier ';'
       | 'let' Identifier '=' expr ';' 
       | 'var' Identifier '=' expr ';'
-      $s.C(v[3]);s.emit(OpGlobalSet, s.def(v[1]).index);s.pop()$
+      $s.C(v[3]);s.emit(OpGlobalSet, s.def(v[1]).index);s.popd()$
       | 'var' Identifier Identifier ';'
       ;
 

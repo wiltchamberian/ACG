@@ -114,3 +114,7 @@ func (s *Token) Select() int {
 func (s *Token) IsTerminal() bool {
 	return true
 }
+
+func (s *Token) Compile(c *NikaCompiler) error {
+	return nil
+}

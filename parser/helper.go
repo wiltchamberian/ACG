@@ -1,6 +1,9 @@
 package parser
 
-import "unicode"
+import (
+	"strings"
+	"unicode"
+)
 
 type TreeType[T any] struct {
 	Value  T
@@ -104,7 +107,15 @@ func (s ArrayIter[T]) Get(i int) T {
 	return s.arr[i]
 }
 
-//mapping function
+// mapping function
 func Mapping[T any](i int) int {
 	return 0
+}
+
+// FirstLower 字符串首字母小写
+func CapitalizeFirstLetter(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }

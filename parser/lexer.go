@@ -12,11 +12,20 @@ const (
 )
 
 type Lexer struct {
-	content       []byte
-	rover         Int
-	length        Int
-	currentLineNo Int
-	mode          int
+	content             []byte
+	rover               Int
+	length              Int
+	currentLineNo       Int
+	currentLineStartPos Int
+	mode                int
+}
+
+func (s *Lexer) GetCurrentLineNo() Int {
+	return s.currentLineNo
+}
+
+func (s *Lexer) GetCurrentColumnNo() Int {
+	return s.rover - s.currentLineStartPos
 }
 
 func (s *Lexer) Reset() {
@@ -24,6 +33,8 @@ func (s *Lexer) Reset() {
 	s.rover = 0
 	s.length = 0
 	s.currentLineNo = 0
+	//relative to whole content
+	s.currentLineStartPos = 0
 }
 
 func (s *Lexer) SkipWhiteSpaces() Int {
@@ -40,6 +51,10 @@ func (s *Lexer) SkipLineBreaks() Int {
 	for s.rover < s.length && s.content[s.rover] == '\n' {
 		count += 1
 		s.rover += 1
+		if s.content[s.rover] == '\n' {
+			s.currentLineStartPos = s.rover + 1
+			s.currentLineNo++
+		}
 	}
 	return count
 }
@@ -62,6 +77,7 @@ func (s *Lexer) SkipUnUseCharacters() Int {
 	for s.rover < s.length && (s.content[s.rover] == '\n' || s.content[s.rover] == ' ' || s.content[s.rover] == '\t' || s.content[s.rover] == '\r') {
 		if s.content[s.rover] == '\n' {
 			s.currentLineNo += 1
+			s.currentLineStartPos = s.rover + 1
 		}
 		count += 1
 		s.rover += 1
@@ -74,6 +90,8 @@ func (s *Lexer) SkipComment() {
 		s.rover = s.rover + 2
 		for s.rover < s.length {
 			if s.content[s.rover] == '\n' {
+				s.currentLineNo += 1
+				s.currentLineStartPos = s.rover + 1
 				s.rover += 1
 				break
 			}
@@ -381,6 +399,11 @@ func (s *Lexer) NextToken() (Token, error) {
 	}
 	ch := s.content[s.rover]
 	typ := s.GetCharacterType(ch)
+
+	//get lineNo and columnNo(used for debug to show
+	//the error)
+	token.ColumnNo = s.GetCurrentColumnNo()
+	token.LineNo = s.GetCurrentLineNo()
 	switch typ {
 	case Number:
 		{

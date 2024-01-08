@@ -6,6 +6,11 @@ type ParserControllor interface {
 	Print(pr *Generator)
 	PrintNewParser(pr *Generator, name string)
 	PrintImportSlice(pr *Generator)
+
+	//farest error position
+	UpdateErrorPosition(pos int)
+	GetErrorPosition() int
+
 	// AltStart(pr *Generator) int
 	// AltEnd(pr *Generator) int
 	// GroupStart(pr *Generator) int
@@ -13,6 +18,17 @@ type ParserControllor interface {
 }
 
 type ParserControllorL struct {
+	errorPos int
+}
+
+func (s *ParserControllorL) UpdateErrorPosition(pos int) {
+	if s.errorPos < pos {
+		s.errorPos = pos
+	}
+}
+
+func (s *ParserControllorL) GetErrorPosition() int {
+	return s.errorPos
 }
 
 func (s *ParserControllorL) ResetIndex(pr *BasicParser) {
@@ -38,6 +54,17 @@ func (s *ParserControllorL) PrintNewParser(pr *Generator, name string) {
 }
 
 type ParserControllorR struct {
+	errorPos int
+}
+
+func (s *ParserControllorR) GetErrorPosition() int {
+	return s.errorPos
+}
+
+func (s *ParserControllorR) UpdateErrorPosition(pos int) {
+	if s.errorPos > pos || s.errorPos == 0 {
+		s.errorPos = pos
+	}
 }
 
 func (s *ParserControllorR) ResetIndex(pr *BasicParser) {

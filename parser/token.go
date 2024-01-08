@@ -84,9 +84,11 @@ var (
 )
 
 type Token struct {
-	Type    TokenType
-	Literal []byte
-	NkType  NikaType
+	Type     TokenType
+	Literal  []byte
+	NkType   NikaType
+	LineNo   int
+	ColumnNo int
 }
 
 var EmptyToken = &Token{Type: TkEmpty}

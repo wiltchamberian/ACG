@@ -14,6 +14,14 @@ type BasicParser struct {
 	control ParserControllor
 }
 
+func (s *BasicParser) GetErrorToken() (*Token, int) {
+	pos := s.control.GetErrorPosition()
+	if pos >= 0 && pos < len(s.tokens) {
+		return &s.tokens[pos], pos
+	}
+	return nil, -1
+}
+
 func NewBasicParserL() BasicParser {
 	var v BasicParser
 	v.control = &ParserControllorL{}
@@ -92,6 +100,7 @@ func (s *BasicParser) Expect(typ TokenType) (*Token, error) {
 		s.control.AdvanceIndex(s)
 		return token, err
 	}
+	s.control.UpdateErrorPosition(s.index)
 	return nil, errors.New("not match")
 }
 
@@ -110,6 +119,7 @@ func (s *BasicParser) ExpectValue(content interface{}) (*Token, error) {
 		s.control.AdvanceIndex(s)
 		return token, nil
 	}
+	s.control.UpdateErrorPosition(s.index)
 	return nil, errors.New("not match")
 }
 

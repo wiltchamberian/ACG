@@ -14,6 +14,10 @@ type NikaType struct {
 	isReady bool //tmp
 }
 
+func (s *NikaType) IsInteger() bool {
+	return true //TODO
+}
+
 type TypeSystem struct {
 	typMap map[string]*NikaType
 }

@@ -1,5 +1,7 @@
 package parser
 
+import "strconv"
+
 var parentMap = make(map[string]string)
 
 func isType(a string, b string) bool {
@@ -84,9 +86,23 @@ var (
 type Token struct {
 	Type    TokenType
 	Literal []byte
+	NkType  NikaType
 }
 
 var EmptyToken = &Token{Type: TkEmpty}
+
+func (s *Token) SetType(tp NikaType) {
+	s.NkType = tp
+}
+
+func (s *Token) GetType() *NikaType {
+	return &s.NkType
+}
+
+func (s *Token) GetInteger() int32 {
+	d, _ := strconv.Atoi(s.GetLiteral())
+	return int32(d)
+}
 
 func (s *Token) GetLiteral() string {
 	return string(s.Literal)
@@ -105,6 +121,14 @@ func (s *Token) GetChildren() []INode {
 
 func (s *Token) GetParent() INode {
 	return nil
+}
+
+func (s *Token) AddChild(child INode) {
+	return
+}
+
+func (s *Token) SetParent(parent INode) {
+	return
 }
 
 func (s *Token) Select() int {

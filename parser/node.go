@@ -9,9 +9,14 @@ import (
 type INode interface {
 	SetName(string)
 	GetName() string
+	SetType(tp NikaType)
+	GetType() *NikaType
+	GetInteger() int32
 	GetLiteral() string
 	GetChildren() []INode
 	GetParent() INode
+	AddChild(INode)
+	SetParent(INode)
 	IsTerminal() bool
 	Select() int //记录该节点在展开时走到哪个alternative分支
 	//Action() string //记录该节点展开时走到那个分支的action
@@ -40,12 +45,29 @@ func ToNkInteger(nd INode) *NkInteger {
 	return &NkInteger{Value: d}
 }
 
+func ToInteger(nd INode) int32 {
+	d, er := strconv.Atoi(nd.GetLiteral())
+	if er != nil {
+		return 0
+	}
+	return int32(d)
+}
+
 type Node struct {
 	Name     string
 	Children []INode
 	Parent   INode
 	selected int
 	Action   string
+	NkType   NikaType
+}
+
+func (s *Node) SetType(tp NikaType) {
+	s.NkType = tp
+}
+
+func (s *Node) GetType() *NikaType {
+	return &s.NkType
 }
 
 func (s *Node) GetLiteral() string {
@@ -68,6 +90,14 @@ func (s *Node) GetParent() INode {
 	return s.Parent
 }
 
+func (s *Node) AddChild(child INode) {
+	s.Children = append(s.Children, child)
+}
+
+func (s *Node) SetParent(parent INode) {
+	s.Parent = parent
+}
+
 func (s *Node) Select() int {
 	return s.selected
 }
@@ -78,6 +108,11 @@ func (s *Node) IsTerminal() bool {
 
 func (s *Node) Compile(c *NikaCompiler) error {
 	return nil
+}
+
+func (s *Node) GetInteger() int32 {
+	d, _ := strconv.Atoi(s.GetLiteral())
+	return int32(d)
 }
 
 func TreePrint(root INode) {

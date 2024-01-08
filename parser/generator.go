@@ -184,9 +184,8 @@ func (s *Generator) PrintAltEnd(rule Rule, i int) {
 	s.Printf("\t\treturn Ret{nodes[0],nil}\n")
 	s.Printf("\t} else{\n")
 
-	//s.Printf("\t\treturn Ret{&Node{\"%s\",nodes,nil,%d,\"%s\"},nil}\n", string(rule.Name), i, rule.Alts[i].action)
 	nodeName := fmt.Sprintf("%s%d", CapitalizeFirstLetter(rule.Name), i)
-	s.Printf("\t\treturn Ret{&%s{Node{\"%s\",nodes,nil,%d,\"%s\"}},nil}\n", nodeName, rule.Name, i, rule.Alts[i].action)
+	s.Printf("\t\treturn Ret{&%s{Node{Name:\"%s\",Children:nodes,Parent:nil,selected:%d,Action:\"%s\"}},nil}\n", nodeName, rule.Name, i, rule.Alts[i].action)
 
 	s.Printf("\t}\n")
 	s.Printf("} else {\n")

@@ -18,17 +18,18 @@ type Symbol struct {
 type SymbolTable struct {
 	mapping map[string]Symbol
 	counter int
+	globals *DataStack
 }
 
-func NewSymbolTable() *SymbolTable {
-	return &SymbolTable{mapping: make(map[string]Symbol), counter: 0}
+func NewSymbolTable(globs *DataStack) *SymbolTable {
+	return &SymbolTable{mapping: make(map[string]Symbol), counter: 0, globals: globs}
 }
 
 func (s *SymbolTable) def(node INode) Symbol {
 	literal := node.GetLiteral()
-	symbol := Symbol{literal, GlobalScope, s.counter}
+	symbol := Symbol{literal, GlobalScope, s.globals.Length()}
 	s.mapping[literal] = symbol
-	s.counter++
+	s.globals.PushInteger(0)
 	return symbol
 }
 
@@ -38,9 +39,11 @@ func (s *SymbolTable) res(node INode) Symbol {
 
 // a handwrite compilerl
 type Compiler struct {
-	instructions Instructions
-	constants    []NkObject
-	symbolTable  *SymbolTable
+	instructions    Instructions
+	constantObjects []NkObject
+	constants       *DataStack
+	globals         *DataStack
+	symbolTable     *SymbolTable
 
 	poses []int
 }
@@ -57,14 +60,20 @@ func (s *Compiler) popIndex() int {
 }
 
 func (s *Compiler) InitCompiler() {
-	s.symbolTable = NewSymbolTable()
+	s.globals = NewDataStack()
+	s.constants = NewDataStack()
+	s.symbolTable = NewSymbolTable(s.globals)
 	s.poses = make([]int, 0)
 }
 
-func (s *Compiler) addConstant(obj NkObject) int {
-	pos := len(s.constants)
-	s.constants = append(s.constants, obj)
+func (s *Compiler) addConstantObject(obj NkObject) int {
+	pos := len(s.constantObjects)
+	s.constantObjects = append(s.constantObjects, obj)
 	return pos
+}
+
+func (s *Compiler) addConstantInteger(val int32) int {
+	return s.constants.PushInteger(val)
 }
 
 func (s *Compiler) emit(opcode OpCode, operands ...int) int {
@@ -75,11 +84,11 @@ func (s *Compiler) emit(opcode OpCode, operands ...int) int {
 	return pos
 }
 
-func (s *Compiler) pop() {
+func (s *Compiler) pop(node INode) {
 	s.emit(OpPop)
 }
 
-func (s *Compiler) popd() {
+func (s *Compiler) popd(node INode) {
 	s.emit(OpPopd)
 }
 

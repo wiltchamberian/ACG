@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"encoding/binary"
 	"strings"
 	"unicode"
 )
@@ -118,4 +119,68 @@ func CapitalizeFirstLetter(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func ReadUint16(ins []byte) uint16 {
+	return binary.LittleEndian.Uint16(ins)
+}
+
+func ReadInt16(ins []byte) int16 {
+	return (int16)(binary.LittleEndian.Uint16(ins))
+}
+
+func ReadUint32(ins []byte) uint32 {
+	return binary.LittleEndian.Uint32(ins)
+}
+
+func ReadInt32(ins []byte) int32 {
+	return int32(binary.LittleEndian.Uint32(ins))
+}
+
+func ReadUint64(ins []byte) uint64 {
+	return binary.LittleEndian.Uint64(ins)
+}
+
+func ReadInt64(ins []byte) int64 {
+	return int64(binary.LittleEndian.Uint64(ins))
+}
+
+func ReadFloat32(ins []byte) float32 {
+	return float32(binary.LittleEndian.Uint32(ins))
+}
+
+func ReadFloat64(ins []byte) float64 {
+	return float64(binary.LittleEndian.Uint64(ins))
+}
+
+func WriteUint16(ins []byte, x uint16) {
+	binary.LittleEndian.PutUint16(ins, x)
+}
+
+func WriteInt16(ins []byte, x int16) {
+	binary.LittleEndian.PutUint16(ins, uint16(x))
+}
+
+func WriteUint32(ins []byte, x uint32) {
+	binary.LittleEndian.PutUint32(ins, x)
+}
+
+func WriteInt32(ins []byte, x int32) {
+	binary.LittleEndian.PutUint32(ins, uint32(x))
+}
+
+func WriteUint64(ins []byte, x uint64) {
+	binary.LittleEndian.PutUint64(ins, x)
+}
+
+func WriteInt64(ins []byte, x int64) {
+	binary.LittleEndian.PutUint64(ins, uint64(x))
+}
+
+func WriteFloat32(ins []byte, x float32) {
+	binary.LittleEndian.PutUint32(ins, (uint32)(x))
+}
+
+func WriteFloat64(ins []byte, x float64) {
+	binary.LittleEndian.PutUint64(ins, (uint64)(x))
 }

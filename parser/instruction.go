@@ -18,7 +18,9 @@ type Definition struct {
 const (
 	OpConstant = iota
 	OpAdd
+	OpFAdd
 	OpSub
+	OpFSub
 	OpMul
 	OpDiv
 	OpTrue
@@ -111,7 +113,7 @@ func Make(opcode OpCode, operands ...int) []byte {
 		width := definition.Widths[i]
 		switch width {
 		case 2:
-			binary.BigEndian.PutUint16(bytes[offset:], uint16(operand))
+			binary.LittleEndian.PutUint16(bytes[offset:], uint16(operand))
 		}
 		offset += width
 	}

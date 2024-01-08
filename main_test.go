@@ -2,6 +2,7 @@ package main
 
 import (
 	. "ACG/parser"
+	"encoding/binary"
 	"fmt"
 	"testing"
 )
@@ -24,6 +25,13 @@ func (s *interA) a() {
 
 type interB struct {
 	interA
+}
+
+func TestEmpty(t *testing.T) {
+	data := make([]byte, 10)
+	binary.LittleEndian.PutUint16(data[0:], 64+256)
+	fmt.Printf("data0:%d", data[0])
+	fmt.Printf("data1:%d", data[1])
 }
 
 func TestNewGenerator(t *testing.T) {
@@ -68,17 +76,21 @@ func TestHelloEmpty(t *testing.T) {
 
 	compiler := NewNikaCompiler()
 	compiler.C(ret.Nd)
-	vm := NewVM(compiler)
+	vm := NewStackMachine(compiler)
 	vm.Print()
 	vm.Run()
 
-	answers := []int{0, 428, 0, -64, 138, 35860, 3, -17, 36348, 33, 14, 32, 0, 1, 1, 0, 3, 1, 1, 0, 0, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 45}
-	for i := 0; i < len(vm.DebugStack); i++ {
-		obj := vm.DebugStack[i]
-		if obj.(*NkInteger).Value != answers[i] {
+	answers := []int32{0, 428, 0, -64, 138, 35860, 3, -17, 36348, 33, 14, 32, 0, 1, 1, 0, 3, 1, 1, 0, 0, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 45}
+	fmt.Printf("answers_length:%d\n", len(answers))
+	fmt.Printf("debugstack_length:%d\n", vm.DebugStack.Length())
+	counter := 0
+	for vm.DebugStack.Length() > 0 {
+		obj := vm.DebugStack.PopInteger()
+		if obj != answers[len(answers)-1-counter] {
 			t.Fatalf("not equal")
 		}
-		fmt.Printf("result:%s\n", obj.ToString())
+		fmt.Printf("result:%d\n", obj)
+		counter++
 	}
 
 }

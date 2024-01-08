@@ -1,13 +1,8 @@
 package parser
 
 import (
-	"encoding/binary"
 	"errors"
 )
-
-func ReadUint16(ins Instructions) uint16 {
-	return binary.BigEndian.Uint16(ins)
-}
 
 const GlobalsSize = 655356
 
@@ -15,7 +10,8 @@ type VM struct {
 	constants    []NkObject
 	instructions Instructions
 	stack        []NkObject
-	sp           int
+
+	sp int
 
 	//global variable
 	globals []NkObject
@@ -30,7 +26,7 @@ type VM struct {
 
 func NewVM(compiler *NikaCompiler) *VM {
 	var vm VM
-	vm.constants = compiler.constants
+	vm.constants = compiler.constantObjects
 	vm.instructions = compiler.instructions
 	vm.globals = make([]NkObject, GlobalsSize)
 	vm.sp = 0

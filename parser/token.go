@@ -121,6 +121,10 @@ func (s *Token) GetChildren() []INode {
 	return []INode{}
 }
 
+func (s *Token) GetChild(index int) INode {
+	return nil
+}
+
 func (s *Token) GetParent() INode {
 	return nil
 }

@@ -2,41 +2,6 @@ package parser
 
 import "fmt"
 
-type Scope = string
-
-const (
-	GlobalScope Scope = "GLOBAL"
-)
-
-// symbol
-type Symbol struct {
-	name  string
-	scope Scope
-	index int //variable index
-}
-
-type SymbolTable struct {
-	mapping map[string]Symbol
-	counter int
-	globals *DataStack
-}
-
-func NewSymbolTable(globs *DataStack) *SymbolTable {
-	return &SymbolTable{mapping: make(map[string]Symbol), counter: 0, globals: globs}
-}
-
-func (s *SymbolTable) def(node INode) Symbol {
-	literal := node.GetLiteral()
-	symbol := Symbol{literal, GlobalScope, s.globals.Length()}
-	s.mapping[literal] = symbol
-	s.globals.PushInteger(0)
-	return symbol
-}
-
-func (s *SymbolTable) res(node INode) Symbol {
-	return s.mapping[node.GetLiteral()]
-}
-
 // a handwrite compilerl
 type Compiler struct {
 	instructions    Instructions
@@ -44,8 +9,20 @@ type Compiler struct {
 	constants       *DataStack
 	globals         *DataStack
 	symbolTable     *SymbolTable
+	typeSystem      *TypeSystem
+	poses           []int
+}
 
-	poses []int
+func (s *Compiler) NewStruct(name string, fields []FieldShow) bool {
+	return s.typeSystem.NewStruct(name, fields)
+}
+
+func (s *Compiler) NewInteger() bool {
+	return s.typeSystem.NewInteger()
+}
+
+func (s *Compiler) NewFloat() bool {
+	return s.typeSystem.NewFloat()
 }
 
 //push index of instruction

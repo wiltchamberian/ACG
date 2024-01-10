@@ -13,6 +13,7 @@ type INode interface {
 	GetType() *NikaType
 	GetInteger() int32
 	GetLiteral() string
+	GetChild(index int) INode
 	GetChildren() []INode
 	GetParent() INode
 	AddChild(INode)
@@ -113,6 +114,10 @@ func (s *Node) Compile(c *NikaCompiler) error {
 func (s *Node) GetInteger() int32 {
 	d, _ := strconv.Atoi(s.GetLiteral())
 	return int32(d)
+}
+
+func (s *Node) GetChild(index int) INode {
+	return s.Children[index]
 }
 
 func TreePrint(root INode) {

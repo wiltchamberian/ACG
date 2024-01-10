@@ -24,7 +24,7 @@ type NikaType struct {
 	length int
 
 	isReady bool //tmp
-	isBasic bool //whether a basic type or not
+	cat     int  //whether a basic type or not
 }
 
 func (s *NikaType) IsInteger() bool {
@@ -105,16 +105,41 @@ func (s *TypeSystem) NewStruct(name string, fields []FieldShow) bool {
 	return ok
 }
 
+func (s *TypeSystem) NewFunc(name string, parameters []string, rets []string) bool {
+	var tp NikaType
+	for i := range parameters {
+		tp.fields = append(tp.fields, FieldShow{typeName: parameters[i]})
+	}
+	tp.length = len(parameters)
+	for j := range rets {
+		tp.fields = append(tp.fields, FieldShow{typeName: rets[j]})
+	}
+	return true
+}
+
+func (s *TypeSystem) NewMethod(structName string, name string, parameters []string, rets []string) bool {
+	var tp NikaType
+	for i := range parameters {
+		tp.fields = append(tp.fields, FieldShow{typeName: parameters[i]})
+	}
+	tp.length = len(parameters)
+	for j := range rets {
+		tp.fields = append(tp.fields, FieldShow{typeName: rets[j]})
+	}
+	tp.name = structName + ":" + name
+	return true
+}
+
 func (s *TypeSystem) NewInteger() bool {
 	var nk NikaType
 	nk.name = "int"
-	nk.isBasic = true
+	nk.cat = CAT_INTEGER
 	return true
 }
 
 func (s *TypeSystem) NewFloat() bool {
 	var nk NikaType
 	nk.name = "f32"
-	nk.isBasic = true
+	nk.cat = CAT_FLOAT
 	return true
 }

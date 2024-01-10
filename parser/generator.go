@@ -185,8 +185,8 @@ func (s *Generator) PrintAltEnd(rule Rule, i int) {
 	s.Printf("\t} else{\n")
 
 	nodeName := fmt.Sprintf("%s%d", CapitalizeFirstLetter(rule.Name), i)
-	s.Printf("\t\treturn Ret{&%s{Node{Name:\"%s\",Children:nodes,Parent:nil,selected:%d,Action:\"%s\"}},nil}\n", nodeName, rule.Name, i, rule.Alts[i].action)
-
+	//s.Printf("\t\treturn Ret{&%s{Node{Name:\"%s\",Children:nodes,Parent:nil,selected:%d,Action:\"%s\"}},nil}\n", nodeName, rule.Name, i, rule.Alts[i].action)
+	s.Printf("\t\treturn Ret{&%s{Node{Name:\"%s\",Children:nodes,Parent:nil,selected:%d}},nil}\n", nodeName, rule.Name, i)
 	s.Printf("\t}\n")
 	s.Printf("} else {\n")
 	s.Printf("\ts.Reset(pos)\n")
@@ -466,7 +466,10 @@ func (s *Generator) PrintNodes(name string, bnf BNFRules) error {
 			if alt.action != "" {
 				s.Printf("v := t.GetChildren()\n")
 				s.Printf("l := len(v)\n")
-				s.Printf("%s\n", alt.action)
+				//s.Printf("%s\n", alt.action)
+				for _, v := range alt.actions {
+					s.Printf("%s\n", v)
+				}
 				s.Printf("Do(v, l)\n") //shut up the compiler!
 			}
 			s.Printf("return nil\n")

@@ -28,7 +28,10 @@ def:
       'let' Identifier Identifier ';'
       | 'let' Identifier '=' expr ';' 
       | 'var' Identifier '=' expr ';'
-      $s.C(v[3]);s.emit(OpGlobalSet, s.def(v[1]).index);s.popd(v[1])$
+      $s.C(v[3])
+       s.emit(OpGlobalSet, s.def(v[1]).index);s.popd(v[1])
+       v[1].SetType(*v[3].GetType())
+      $
       | 'var' Identifier Identifier ';'
       ;
 
@@ -51,7 +54,8 @@ param : Identifier Identifier
 
 exprs: 
       (expr ',')* expr
-      $for i:=0;i<l-1;i+=2{s.C(v[i]);s.pop(v[i])};s.C(v[l-1])$
+      $for i:=0;i<l-1;i+=2{s.C(v[i]);s.pop(v[i])};
+        s.C(v[l-1])$
       ;
     
 expr: (Identifier aop)* cond

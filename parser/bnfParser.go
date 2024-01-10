@@ -18,7 +18,9 @@ type Group struct {
 }
 
 type Alter struct {
-	action           string
+	action string
+	//split action to multiple lines
+	actions          []string
 	NotDefaultAction bool
 	Groups           []Group
 }
@@ -54,16 +56,31 @@ func NewBNFParser() BNFParser {
 
 func (s *BNFParser) updateActions(rules []Rule) {
 	for _, rule := range rules {
-		for _, alt := range rule.Alts {
-			alt.action = s.updateAction(alt.action)
+		for index := range rule.Alts {
+			rule.Alts[index].actions = s.updateAction(rule.Alts[index].action)
 		}
 	}
 }
 
-func (s *BNFParser) updateAction(action string) string {
+func (s *BNFParser) updateAction(action string) []string {
+	var actions []string = make([]string, 0)
 	var output string
 	l := len(action)
-	for i := 0; i < len(action); i++ {
+	for i := 0; i <= len(action); i++ {
+		if (i == len(action)) || (action[i] == '\n') {
+			i += 1
+			for i < len(action) {
+				if action[i] == ' ' || action[i] == '\t' {
+					i++
+				} else {
+					break
+				}
+			}
+			i -= 1
+			actions = append(actions, output)
+			output = ""
+			continue
+		}
 		if action[i] == '#' {
 			start := i
 			end := start + 1
@@ -80,14 +97,16 @@ func (s *BNFParser) updateAction(action string) string {
 			output = output + string(action[i])
 		}
 	}
-	return output
+	return actions
 }
 
-func (gp *BNFParser) Parse() ([]Rule, error) {
+func (gp *BNFParser) Parse() (rules []Rule, err error) {
 	gp.ParseTerminators()
 	gp.ParseBNFConfig()
 	gp.ParseBNFActionAlias()
-	return gp.Grammar()
+	rules, err = gp.Grammar()
+	gp.updateActions(rules)
+	return
 }
 
 func (gp *BNFParser) ParseTerminators() error {
@@ -353,7 +372,7 @@ func (gp *BNFParser) ParseFile(path string) (BNFRules, error) {
 	writer.CloseFile()
 
 	rules, err := gp.Parse()
-	gp.updateActions(rules)
+
 	var bnfRules BNFRules
 	bnfRules.Rules = rules
 	bnfRules.Config = gp.Config

@@ -55,7 +55,7 @@ func TestNewGenerator(t *testing.T) {
 
 func TestHelloEmpty(t *testing.T) {
 	var file FileReader
-	content := file.Read("./testcode.c")
+	content := file.Read("../testcode.c")
 	var prog string = string(content)
 
 	var nika = NewNikaParser()
@@ -94,3 +94,5 @@ func TestHelloEmpty(t *testing.T) {
 	}
 
 }
+
+

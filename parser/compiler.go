@@ -122,3 +122,5 @@ func (s *Compiler) replaceAll() {
 func (s *Compiler) currentPos() int {
 	return len(s.instructions)
 }
+
+//type NikaCompiler =  Compiler
